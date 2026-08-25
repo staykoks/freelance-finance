@@ -19,6 +19,7 @@
          CHART.JS CDN
          ===================================================== -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
 
@@ -1071,6 +1072,10 @@
                 ↓ Зафиксировать вывод
             </button>
 
+            <button class="btn btn-success" onclick="exportOrdersToExcel()">
+                📊 Экспорт в Excel
+            </button>
+
 
             <button
                 id="addOrderButton"
@@ -1205,7 +1210,7 @@
                             </span>
 
                             <span
-                                id="averageDayAllTime"
+                                id="avgDailyAllTime"
                                 class="stat-value"
                             >
                                 0 ₽
@@ -1220,7 +1225,7 @@
                             </span>
 
                             <span
-                                id="averageDayCurrentYear"
+                                id="avgDailyYear"
                                 class="stat-value"
                             >
                                 0 ₽
@@ -1235,7 +1240,33 @@
                             </span>
 
                             <span
-                                id="averageDayCurrentMonth"
+                                id="avgDailyMonth"
+                                class="stat-value"
+                            >
+                                0 ₽
+                            </span>
+                        </li>
+
+                        <li>
+                            <span>
+                                Средняя ставка в час за месяц
+                            </span>
+
+                            <span
+                                id="avgHourlyMonth"
+                                class="stat-value"
+                            >
+                                0 ₽
+                            </span>
+                        </li>
+
+                        <li>
+                            <span>
+                                Средняя ставка в час за год
+                            </span>
+
+                            <span
+                                id="avgHourlyYear"
                                 class="stat-value"
                             >
                                 0 ₽
@@ -2144,6 +2175,85 @@ function getCredentials() {
 
 }
 
+function calculateAverageHourlyRate(
+    orders,
+    startDate,
+    endDate
+) {
+    let totalIncome = 0;
+    let totalHours = 0;
+
+    orders.forEach(order => {
+
+        // Заказ считается оплаченным, если:
+        // статус "Оплачен" ИЛИ заполнена дата оплаты.
+        if (!isPaid(order)) {
+            return;
+        }
+
+        // Для расчета ставки за месяц/год нам нужна
+        // именно дата поступления денег.
+        const parts = dateParts(order.date_paid);
+
+        if (!parts) {
+            return;
+        }
+
+        // Создаем локальную дату без UTC,
+        // чтобы не было проблем с часовыми поясами.
+        const paidDate = new Date(
+            parts.year,
+            parts.month - 1,
+            parts.day
+        );
+
+        paidDate.setHours(0, 0, 0, 0);
+
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+
+        if (
+            paidDate < start ||
+            paidDate > end
+        ) {
+            return;
+        }
+
+        const price =
+            Number(order.price) || 0;
+
+        const tips =
+            Number(order.tips) || 0;
+
+        const hours =
+            Number(order.hours_spent) || 0;
+
+        totalIncome +=
+            price + tips;
+
+        totalHours +=
+            hours;
+    });
+
+
+    // Если часов нет, математически
+    // невозможно рассчитать Р/час.
+    if (totalHours <= 0) {
+        return null;
+    }
+
+
+    // Например:
+    //
+    // заработано 100 000 ₽
+    // затрачено 50 часов
+    //
+    // 100000 / 50 = 2000 ₽/час
+    return totalIncome / totalHours;
+}
 
 function saveCredentials(url, key) {
 
@@ -2509,23 +2619,50 @@ async function loadAllData() {
         return;
     }
 
+    try {
 
-    await loadOrders();
+        await loadOrders();
+        await loadWithdrawals();
 
-    await loadWithdrawals();
+        console.log(
+            "Данные загружены.",
+            {
+                orders: orders.length,
+                withdrawals: withdrawals.length
+            }
+        );
 
-    renderOrders();
+        renderOrders();
+        renderWithdrawals();
 
-    renderWithdrawals();
+        updateBalance();
 
-    updateBalance();
+        // ВАЖНО:
+        // аналитика вызывается только ПОСЛЕ
+        // загрузки заказов из Supabase.
+        updateAnalytics();
+        renderYearAnalytics();
+        renderTypeRanking();
 
-    updateAnalytics();
+        
 
-    updateYearSelectors();
+        updateYearSelectors();
 
-    renderChart();
+        renderChart();
 
+    } catch (error) {
+
+        console.error(
+            "Ошибка обновления приложения:",
+            error
+        );
+
+        showToast(
+            "Ошибка обновления данных: " +
+            error.message,
+            "error"
+        );
+    }
 }
 
 
@@ -3688,43 +3825,251 @@ function calculatePeriodAverage(
 
 function updateAnalytics() {
 
-    const paidOrders =
-        getPaidOrders();
+    console.log("=== UPDATE ANALYTICS ===");
+    console.log("Всего заказов:", orders.length);
+
+    /*
+    ============================================================
+    Получаем только оплаченные заказы.
+
+    Используем существующую функцию isPaid():
+    - статус "Оплачен"
+    ИЛИ
+    - заполнена date_paid
+    ============================================================
+    */
+
+    const paidOrders = orders.filter(order => {
+
+        return (
+            isPaid(order) &&
+            order.date_paid
+        );
+
+    });
+
+    // ============================================================
+    // ЗАРАБОТАНО ЗА ВСЁ ВРЕМЯ
+    // ============================================================
+    //
+    // Учитываем только оплаченные заказы.
+    // Доход заказа = Цена + Чаевые.
+    //
+    // Например:
+    // Цена    = 10 000 ₽
+    // Чаевые  = 500 ₽
+    // Доход   = 10 500 ₽
+    //
+    // Суммируем все оплаченные заказы независимо от года.
+    // ============================================================
+
+    const allTimeIncome =
+        paidOrders.reduce(
+            (sum, order) =>
+                sum + orderTotal(order),
+            0
+        );
 
 
-    const allTime =
-        paidOrders
-            .reduce(
+    // Выводим сумму в карточку
+    const allTimeIncomeElement =
+        document.getElementById(
+            "allTimeIncome"
+        );
+
+    if (allTimeIncomeElement) {
+
+        allTimeIncomeElement.textContent =
+            money(allTimeIncome);
+
+    }
+
+    console.log("=== ДАННЫЕ ОПЛАЧЕННОГО ЗАКАЗА ===");
+
+    paidOrders.forEach(order => {
+
+        console.log({
+            id: order.id,
+            date_paid: order.date_paid,
+            date_paid_type: typeof order.date_paid,
+            price: order.price,
+            tips: order.tips,
+            hours_spent: order.hours_spent,
+            status: order.status
+        });
+
+    });
+
+    console.log(
+        "Оплаченных заказов:",
+        paidOrders.length
+    );
+
+
+    /*
+    ============================================================
+    Вспомогательная функция даты.
+
+    ВАЖНО:
+    dateParts() уже есть в твоём коде.
+
+    Используем её вместо new Date("2026-08-10"),
+    чтобы не получить проблемы с часовым поясом.
+    ============================================================
+    */
+
+    function orderDate(order) {
+
+        const parts =
+            dateParts(order.date_paid);
+
+        if (!parts) {
+            return null;
+        }
+
+        return new Date(
+            parts.year,
+            parts.month - 1,
+            parts.day
+        );
+    }
+
+
+    /*
+    ============================================================
+    ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ:
+    форматирование денег.
+    ============================================================
+    */
+
+    function formatMoney(value) {
+
+        return Number(value || 0)
+            .toLocaleString(
+                "ru-RU",
+                {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }
+            ) + " ₽";
+    }
+
+
+    /*
+    ============================================================
+    1. ОБЩИЙ ДОХОД ЗА ВСЁ ВРЕМЯ
+    ============================================================
+    */
+
+    let totalIncome = 0;
+
+    paidOrders.forEach(order => {
+
+        totalIncome +=
+            orderTotal(order);
+
+    });
+
+    console.log(
+        "Доход за всё время:",
+        totalIncome
+    );
+
+
+    /*
+    ============================================================
+    2. НАХОДИМ ДАТУ ПЕРВОГО ОПЛАЧЕННОГО ЗАКАЗА
+    ============================================================
+    */
+
+    let firstDate = null;
+
+    paidOrders.forEach(order => {
+
+        const date =
+            orderDate(order);
+
+        if (!date) {
+            return;
+        }
+
+        if (
+            firstDate === null ||
+            date < firstDate
+        ) {
+
+            firstDate = date;
+
+        }
+
+    });
+
+
+    /*
+    ============================================================
+    3. СРЕДНИЙ ЗАРАБОТОК В ДЕНЬ ЗА ВСЁ ВРЕМЯ
+    ============================================================
+
+    Например:
+
+    Первый заказ: 01.01.2026
+    Сегодня:      10.08.2026
+
+    Считаем:
+
+        весь заработок
+        ----------------
+        количество календарных дней
+
+    День первого заказа тоже учитывается.
+    ============================================================
+    */
+
+    let avgDailyAllTime = 0;
+
+    if (firstDate) {
+
+        const today =
+            new Date();
+
+        today.setHours(
+            0, 0, 0, 0
+        );
+
+        firstDate.setHours(
+            0, 0, 0, 0
+        );
+
+        const days =
+            Math.floor(
                 (
-                    sum,
-                    order
-                ) =>
-                    sum +
-                    orderTotal(order),
-                0
-            );
+                    today.getTime() -
+                    firstDate.getTime()
+                ) / 86400000
+            ) + 1;
+
+        if (days > 0) {
+
+            avgDailyAllTime =
+                totalIncome / days;
+
+        }
+
+    }
 
 
-    $("#allTimeIncome")
-        .textContent =
-        money(allTime);
-
+    /*
+    ============================================================
+    4. ТЕКУЩИЙ ГОД
+    ============================================================
+    */
 
     const now =
         new Date();
 
-
     const currentYear =
         now.getFullYear();
 
-
-    const currentMonth =
-        now.getMonth();
-
-
-    /*
-        Начало и конец текущего года.
-    */
 
     const yearStart =
         new Date(
@@ -3733,174 +4078,444 @@ function updateAnalytics() {
             1
         );
 
+    yearStart.setHours(
+        0, 0, 0, 0
+    );
 
-    const yearEnd =
-        new Date(
-            currentYear,
-            11,
-            31
-        );
+
+    let yearIncome = 0;
+
+    paidOrders.forEach(order => {
+
+        const date =
+            orderDate(order);
+
+        if (!date) {
+            return;
+        }
+
+        if (
+            date >= yearStart &&
+            date <= now
+        ) {
+
+            yearIncome +=
+                orderTotal(order);
+
+        }
+
+    });
 
 
     /*
-        Начало и конец текущего месяца.
+    Количество дней от 1 января
+    до сегодняшнего дня.
+
+    Если сегодня 10 августа,
+    делим не на 365, а только
+    на прошедшие дни года.
+    */
+
+    const todayStart =
+        new Date(now);
+
+    todayStart.setHours(
+        0, 0, 0, 0
+    );
+
+
+    const yearDays =
+        Math.floor(
+            (
+                todayStart.getTime() -
+                yearStart.getTime()
+            ) / 86400000
+        ) + 1;
+
+
+    const avgDailyYear =
+        yearDays > 0
+            ? yearIncome / yearDays
+            : 0;
+
+
+    /*
+    ============================================================
+    5. ТЕКУЩИЙ МЕСЯЦ
+    ============================================================
     */
 
     const monthStart =
         new Date(
             currentYear,
-            currentMonth,
+            now.getMonth(),
             1
         );
 
+    monthStart.setHours(
+        0, 0, 0, 0
+    );
 
-    const monthEnd =
-        new Date(
-            currentYear,
-            currentMonth + 1,
-            0
+
+    let monthIncome = 0;
+
+    paidOrders.forEach(order => {
+
+        const date =
+            orderDate(order);
+
+        if (!date) {
+            return;
+        }
+
+        if (
+            date >= monthStart &&
+            date <= now
+        ) {
+
+            monthIncome +=
+                orderTotal(order);
+
+        }
+
+    });
+
+
+    /*
+    Если сегодня 10 августа,
+    количество дней = 10.
+
+    Поэтому:
+
+        доход августа / 10
+
+    а не:
+
+        доход августа / 31
+    */
+
+    const monthDays =
+        now.getDate();
+
+
+    const avgDailyMonth =
+        monthDays > 0
+            ? monthIncome / monthDays
+            : 0;
+
+
+    /*
+    ============================================================
+    6. СРЕДНЯЯ СТАВКА В ЧАС ЗА ГОД
+    ============================================================
+
+    Формула:
+
+        Цена + Чаевые
+        ----------------
+        Все затраченные часы
+    */
+
+    let yearHourlyIncome = 0;
+    let yearHours = 0;
+
+    paidOrders.forEach(order => {
+
+        const date =
+            orderDate(order);
+
+        if (!date) {
+            return;
+        }
+
+        if (
+            date >= yearStart &&
+            date <= now
+        ) {
+
+            yearHourlyIncome +=
+                orderTotal(order);
+
+            yearHours +=
+                Number(
+                    order.hours_spent
+                ) || 0;
+
+        }
+
+    });
+
+
+    const avgHourlyYear =
+        yearHours > 0
+            ? yearHourlyIncome / yearHours
+            : null;
+
+
+    /*
+    ============================================================
+    7. СРЕДНЯЯ СТАВКА В ЧАС ЗА МЕСЯЦ
+    ============================================================
+    */
+
+    let monthHourlyIncome = 0;
+    let monthHours = 0;
+
+    paidOrders.forEach(order => {
+
+        const date =
+            orderDate(order);
+
+        if (!date) {
+            return;
+        }
+
+        if (
+            date >= monthStart &&
+            date <= now
+        ) {
+
+            monthHourlyIncome +=
+                orderTotal(order);
+
+            monthHours +=
+                Number(
+                    order.hours_spent
+                ) || 0;
+
+        }
+
+    });
+
+
+    const avgHourlyMonth =
+        monthHours > 0
+            ? monthHourlyIncome / monthHours
+            : null;
+
+
+    /*
+    ============================================================
+    8. ВЫВОДИМ ДАННЫЕ В HTML
+    ============================================================
+    */
+
+    const allTimeElement =
+        document.getElementById(
+            "avgDailyAllTime"
+        );
+
+    const yearElement =
+        document.getElementById(
+            "avgDailyYear"
+        );
+
+    const monthElement =
+        document.getElementById(
+            "avgDailyMonth"
+        );
+
+    const hourlyMonthElement =
+        document.getElementById(
+            "avgHourlyMonth"
+        );
+
+    const hourlyYearElement =
+        document.getElementById(
+            "avgHourlyYear"
         );
 
 
     /*
-        Для "всего времени" используем диапазон
-        от первой оплаты до сегодняшнего дня.
+    Проверяем, что HTML-элементы действительно найдены.
     */
 
-    let allTimeStart =
-        new Date(
-            currentYear,
-            0,
-            1
-        );
+    console.log(
+        "Элементы статистики:",
+        {
+            allTimeElement,
+            yearElement,
+            monthElement,
+            hourlyMonthElement,
+            hourlyYearElement
+        }
+    );
 
 
-    const paidDates =
-        paidOrders
-            .map(
-                order =>
-                    dateParts(
-                        order.date_paid
-                    )
-            )
-            .filter(Boolean);
+    if (allTimeElement) {
 
-
-    if (paidDates.length) {
-
-        paidDates.sort(
-            (a, b) =>
-                new Date(
-                    a.year,
-                    a.month - 1,
-                    a.day
-                ) -
-                new Date(
-                    b.year,
-                    b.month - 1,
-                    b.day
-                )
-        );
-
-
-        const first =
-            paidDates[0];
-
-
-        allTimeStart =
-            new Date(
-                first.year,
-                first.month - 1,
-                first.day
+        allTimeElement.textContent =
+            formatMoney(
+                avgDailyAllTime
             );
 
     }
 
 
-    const averageAllTime =
-        calculatePeriodAverage(
-            paidOrders,
-            allTimeStart,
-            now
-        );
+    if (yearElement) {
 
-
-    const averageYear =
-        calculatePeriodAverage(
-            paidOrders,
-            yearStart,
-            yearEnd
-        );
-
-
-    const averageMonth =
-        calculatePeriodAverage(
-            paidOrders,
-            monthStart,
-            monthEnd
-        );
-
-
-    $("#averageDayAllTime")
-        .textContent =
-        money(averageAllTime);
-
-
-    $("#averageDayCurrentYear")
-        .textContent =
-        money(averageYear);
-
-
-    $("#averageDayCurrentMonth")
-        .textContent =
-        money(averageMonth);
-
-
-    /* --------------------------------------------------------
-       YEARS
-       -------------------------------------------------------- */
-
-    const byYear = {};
-
-
-    paidOrders.forEach(order => {
-
-        const parts =
-            dateParts(
-                order.date_paid
+        yearElement.textContent =
+            formatMoney(
+                avgDailyYear
             );
 
+    }
+
+
+    if (monthElement) {
+
+        monthElement.textContent =
+            formatMoney(
+                avgDailyMonth
+            );
+
+    }
+
+
+    if (hourlyMonthElement) {
+
+        hourlyMonthElement.textContent =
+            avgHourlyMonth === null
+                ? "—"
+                : formatMoney(
+                    avgHourlyMonth
+                ) + "/ч";
+
+    }
+
+
+    if (hourlyYearElement) {
+
+        hourlyYearElement.textContent =
+            avgHourlyYear === null
+                ? "—"
+                : formatMoney(
+                    avgHourlyYear
+                ) + "/ч";
+
+    }
+
+
+    /*
+    ============================================================
+    ОТЛАДОЧНАЯ ИНФОРМАЦИЯ
+    ============================================================
+
+    После исправления можешь открыть F12 → Console.
+
+    Там должны появиться примерно:
+
+        Всего заказов: 15
+        Оплаченных заказов: 10
+        Доход за всё время: 123456
+    */
+
+    console.log(
+        "Средний день за всё время:",
+        avgDailyAllTime
+    );
+
+    console.log(
+        "Средний день за год:",
+        avgDailyYear
+    );
+
+    console.log(
+        "Средний день за месяц:",
+        avgDailyMonth
+    );
+
+    console.log(
+        "Средняя ставка за год:",
+        avgHourlyYear
+    );
+
+    console.log(
+        "Средняя ставка за месяц:",
+        avgHourlyMonth
+    );
+}
+
+/* ============================================================
+   YEAR ANALYTICS
+   ============================================================ */
+
+function renderYearAnalytics() {
+
+    const yearIncome = {};
+
+    /*
+    Берём только оплаченные заказы.
+    Для каждого заказа определяем год
+    по дате получения денег date_paid.
+    */
+
+    getPaidOrders().forEach(order => {
+
+        const parts =
+            dateParts(order.date_paid);
 
         if (!parts) {
             return;
         }
 
+        const year =
+            parts.year;
 
-        if (!byYear[parts.year]) {
-
-            byYear[parts.year] = 0;
-
+        if (!yearIncome[year]) {
+            yearIncome[year] = 0;
         }
 
-
-        byYear[parts.year] +=
+        yearIncome[year] +=
             orderTotal(order);
 
     });
 
 
     const years =
-        Object.keys(byYear)
+        Object.keys(yearIncome)
             .map(Number)
             .sort(
                 (a, b) => b - a
             );
 
 
-    $("#yearIncomeList").innerHTML =
-        years.length
-            ? years
-                .map(year => `
+    const element =
+        document.getElementById(
+            "yearIncomeList"
+        );
+
+    if (!element) {
+        return;
+    }
+
+
+    /*
+    Если оплаченных заказов нет.
+    */
+
+    if (years.length === 0) {
+
+        element.innerHTML =
+            "<li>Нет данных</li>";
+
+        return;
+    }
+
+
+    /*
+    Формируем список:
+
+    2026       25 000 ₽
+    2025       18 500 ₽
+    2024       12 000 ₽
+    */
+
+    element.innerHTML =
+        years
+            .map(year => {
+
+                return `
                     <li>
                         <span>
                             ${year}
@@ -3908,159 +4523,178 @@ function updateAnalytics() {
 
                         <span class="stat-value">
                             ${money(
-                                byYear[year]
+                                yearIncome[year]
                             )}
                         </span>
                     </li>
-                `)
-                .join("")
-            : `
-                <li>
-                    Нет данных
-                </li>
-            `;
+                `;
+
+            })
+            .join("");
+}
+
+/* ============================================================
+   TYPE RANKING
+   ============================================================ */
+
+function renderTypeRanking() {
+
+    /*
+    Для каждого типа работы собираем:
+
+    - количество заказов
+    - общий заработок
+    - количество затраченных часов
+    - среднюю ставку Р/час
+    */
+
+    const stats = {};
 
 
-    /* --------------------------------------------------------
-       MONTHS
-       -------------------------------------------------------- */
-
-    renderMonthlyAnalytics();
-
-
-    /* --------------------------------------------------------
-       TYPE RANKING
-       -------------------------------------------------------- */
-
-    const byType = {};
-
-
-    TYPE_NAMES.forEach(type => {
-
-        byType[type] = {
-
-            income: 0,
-
-            hours: 0,
-
-            count: 0
-
-        };
-
-    });
-
-
-    paidOrders.forEach(order => {
+    getPaidOrders().forEach(order => {
 
         const type =
             order.type_work ||
             "Другое";
 
 
-        if (!byType[type]) {
+        if (!stats[type]) {
 
-            byType[type] = {
-
+            stats[type] = {
+                count: 0,
                 income: 0,
-
-                hours: 0,
-
-                count: 0
-
+                hours: 0
             };
 
         }
 
 
-        byType[type].income +=
+        stats[type].count++;
+
+        stats[type].income +=
             orderTotal(order);
 
-
-        byType[type].hours +=
+        stats[type].hours +=
             Number(
                 order.hours_spent
             ) || 0;
 
-
-        byType[type].count++;
-
     });
 
 
-    const typeRanking =
-        Object.entries(byType)
-            .filter(
-                ([, data]) =>
-                    data.count > 0
-            )
+    const types =
+        Object.keys(stats)
             .sort(
-                (
-                    [, a],
-                    [, b]
-                ) =>
-                    b.income -
-                    a.income
+                (a, b) =>
+                    stats[b].income -
+                    stats[a].income
             );
 
 
-    $("#typeRankingList").innerHTML =
-        typeRanking.length
-            ? typeRanking
-                .map(
-                    (
-                        [type, data]
-                    ) => {
+    const element =
+        document.getElementById(
+            "typeRankingList"
+        );
 
-                        const hourly =
-                            data.hours > 0
-                                ? data.income /
-                                  data.hours
-                                : null;
+    if (!element) {
+        return;
+    }
 
 
-                        return `
-                            <li>
+    if (types.length === 0) {
 
-                                <span>
-                                    ${escapeHtml(type)}
-                                </span>
+        element.innerHTML =
+            "<li>Нет данных</li>";
 
-                                <span
-                                    class="stat-value"
-                                >
-                                    ${money(
-                                        data.income
-                                    )}
+        return;
+    }
 
-                                    <br>
 
-                                    <small
-                                        style="
-                                            color:#94a3b8;
-                                            font-weight:400;
-                                        "
-                                    >
-                                        Р/час:
-                                        ${
-                                            hourly === null
-                                                ? "—"
-                                                : money(hourly)
-                                        }
-                                    </small>
-                                </span>
+    /*
+    Выводим рейтинг.
 
-                            </li>
-                        `;
+    Например:
 
-                    }
-                )
-                .join("")
-            : `
-                <li>
-                    Нет оплаченных заказов
-                </li>
-            `;
+    🥇 Курсовая
+       25 000 ₽
+       5 заказов
+       Средний Р/час: 1 850 ₽
 
+    🥈 Диплом
+       18 000 ₽
+       2 заказа
+       Средний Р/час: 1 500 ₽
+    */
+
+    element.innerHTML =
+        types
+            .map((type, index) => {
+
+                const item =
+                    stats[type];
+
+
+                const averageHourlyRate =
+                    item.hours > 0
+                        ? item.income /
+                          item.hours
+                        : null;
+
+
+                const place =
+                    index === 0
+                        ? "🥇"
+                        : index === 1
+                            ? "🥈"
+                            : index === 2
+                                ? "🥉"
+                                : `${index + 1}.`;
+
+
+                return `
+                    <li>
+                        <div>
+                            <strong>
+                                ${place}
+                                ${escapeHtml(type)}
+                            </strong>
+
+                            <div style="
+                                color: var(--text-secondary);
+                                font-size: 12px;
+                                margin-top: 4px;
+                            ">
+                                ${item.count}
+                                ${
+                                    item.count === 1
+                                        ? "заказ"
+                                        : item.count < 5
+                                            ? "заказа"
+                                            : "заказов"
+                                }
+
+                                ·
+
+                                ${
+                                    averageHourlyRate === null
+                                        ? "Р/час: —"
+                                        : "Р/час: " +
+                                          money(
+                                              averageHourlyRate
+                                          ) +
+                                          "/ч"
+                                }
+                            </div>
+                        </div>
+
+                        <span class="stat-value">
+                            ${money(item.income)}
+                        </span>
+                    </li>
+                `;
+
+            })
+            .join("");
 }
 
 
@@ -5634,6 +6268,155 @@ document
     await loadAllData();
 
 })();
+
+function exportOrdersToExcel() {
+    if (!orders || orders.length === 0) {
+        alert("История заказов пуста.");
+        return;
+    }
+
+    // Преобразуем данные Supabase в удобный для Excel формат.
+    const excelData = orders.map(order => {
+        const price = Number(order.price) || 0;
+        const tips = Number(order.tips) || 0;
+        const hours = Number(order.hours_spent) || 0;
+
+        // Р/час рассчитывается так же, как в таблице приложения.
+        const hourlyRate =
+            hours > 0
+                ? (price + tips) / hours
+                : null;
+
+        return {
+            "ID": order.id,
+
+            "Дата принятия": order.date_accepted || "",
+
+            "Дата отправки": order.date_submitted || "",
+
+            "Тип работы": order.type_work || "",
+
+            "Описание / предмет": order.description || "",
+
+            "Цена": price,
+
+            "Чаевые": tips,
+
+            "Всего": price + tips,
+
+            "Затрачено часов": hours,
+
+            "Р/час":
+                hourlyRate === null
+                    ? ""
+                    : Number(hourlyRate.toFixed(2)),
+
+            "Дата оплаты": order.date_paid || "",
+
+            "Статус": order.status || ""
+        };
+    });
+
+    // Создаем Excel-книгу.
+    const workbook = XLSX.utils.book_new();
+
+    // Создаем лист с историей заказов.
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+    // Настраиваем ширину колонок.
+    worksheet["!cols"] = [
+        { wch: 12 }, // ID
+        { wch: 16 }, // Дата принятия
+        { wch: 16 }, // Дата отправки
+        { wch: 18 }, // Тип работы
+        { wch: 40 }, // Описание
+        { wch: 14 }, // Цена
+        { wch: 14 }, // Чаевые
+        { wch: 14 }, // Всего
+        { wch: 18 }, // Часы
+        { wch: 14 }, // Р/час
+        { wch: 16 }, // Дата оплаты
+        { wch: 18 }  // Статус
+    ];
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "История заказов"
+    );
+
+    // Добавляем отдельный лист со сводкой.
+    const totalIncome = orders.reduce((sum, order) => {
+        const isPaid =
+            order.status === "Оплачен" ||
+            !!order.date_paid;
+
+        if (!isPaid) return sum;
+
+        return sum +
+            (Number(order.price) || 0) +
+            (Number(order.tips) || 0);
+    }, 0);
+
+    const totalHours = orders.reduce((sum, order) => {
+        const isPaid =
+            order.status === "Оплачен" ||
+            !!order.date_paid;
+
+        if (!isPaid) return sum;
+
+        return sum + (Number(order.hours_spent) || 0);
+    }, 0);
+
+    const summary = [
+        {
+            "Показатель": "Заработано за всё время",
+            "Значение": totalIncome
+        },
+        {
+            "Показатель": "Оплаченных заказов",
+            "Значение": orders.filter(order =>
+                order.status === "Оплачен" ||
+                !!order.date_paid
+            ).length
+        },
+        {
+            "Показатель": "Затрачено часов",
+            "Значение": totalHours
+        },
+        {
+            "Показатель": "Средняя ставка Р/час",
+            "Значение":
+                totalHours > 0
+                    ? Number((totalIncome / totalHours).toFixed(2))
+                    : 0
+        }
+    ];
+
+    const summarySheet =
+        XLSX.utils.json_to_sheet(summary);
+
+    summarySheet["!cols"] = [
+        { wch: 30 },
+        { wch: 20 }
+    ];
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        summarySheet,
+        "Сводка"
+    );
+
+    // Формируем имя файла с текущей датой.
+    const date = new Date()
+        .toISOString()
+        .slice(0, 10);
+
+    XLSX.writeFile(
+        workbook,
+        `История_заказов_${date}.xlsx`
+    );
+}
 
 </script>
 
