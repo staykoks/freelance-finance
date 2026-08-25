@@ -702,7 +702,67 @@
      SETUP SCREEN
      Показывается, если Supabase credentials еще не сохранены.
      ========================================================= -->
+<!-- =========================================================
+     AUTH SCREEN
+     ========================================================= -->
 
+<div id="authScreen" class="setup-screen hidden">
+
+    <div class="setup-card">
+
+        <h1>Вход в Freelance Finance</h1>
+
+        <p>
+            Войдите в свой аккаунт, чтобы получить доступ
+            к личным финансовым данным.
+        </p>
+
+        <form id="loginForm">
+
+            <div class="field">
+                <label for="loginEmail">
+                    Email
+                </label>
+
+                <input
+                    id="loginEmail"
+                    type="email"
+                    autocomplete="email"
+                    required
+                >
+            </div>
+
+            <br>
+
+            <div class="field">
+                <label for="loginPassword">
+                    Пароль
+                </label>
+
+                <input
+                    id="loginPassword"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                >
+            </div>
+
+            <br>
+
+            <button
+                class="btn btn-primary"
+                type="submit"
+                style="width:100%;"
+            >
+                Войти
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+    
 <div id="setupScreen" class="setup-screen hidden">
     <div class="setup-card">
         <h1>Настройка приложения</h1>
@@ -789,6 +849,12 @@
                 >
                     ↓ Вывод средств
                 </button>
+                <button
+    class="btn btn-secondary"
+    id="logoutButton"
+>
+    Выйти
+</button>
             </div>
 
         </div>
@@ -1544,8 +1610,11 @@ const STORAGE_URL = "freelance_supabase_url";
 const STORAGE_KEY = "freelance_supabase_key";
 
 let supabaseClient = null;
+let currentUser = null;
+
 let orders = [];
 let withdrawals = [];
+
 let currentChart = null;
 
 
@@ -1659,11 +1728,21 @@ async function startApplication() {
 
     const credentials = getSavedCredentials();
 
+
+    /*
+        Если Supabase URL/key еще не сохранены,
+        сначала показываем экран настройки подключения.
+    */
+
     if (!credentials.url || !credentials.key) {
+
         $("#setupScreen").classList.remove("hidden");
+        $("#authScreen").classList.add("hidden");
         $("#app").classList.add("hidden");
+
         return;
     }
+
 
     if (!initializeSupabase(
         credentials.url,
@@ -1672,8 +1751,57 @@ async function startApplication() {
         return;
     }
 
+
+    /*
+        Проверяем, есть ли сохраненная Supabase Auth-сессия.
+    */
+
+    const {
+        data: { session },
+        error
+    } = await supabaseClient.auth.getSession();
+
+
+    if (error) {
+
+        console.error(error);
+
+        showToast(
+            "Ошибка проверки авторизации",
+            "error"
+        );
+
+        return;
+    }
+
+
+    /*
+        Пользователь еще не вошел.
+    */
+
+    if (!session) {
+
+        currentUser = null;
+
+        $("#setupScreen").classList.add("hidden");
+        $("#app").classList.add("hidden");
+        $("#authScreen").classList.remove("hidden");
+
+        return;
+    }
+
+
+    /*
+        Пользователь авторизован.
+    */
+
+    currentUser = session.user;
+
+
     $("#setupScreen").classList.add("hidden");
+    $("#authScreen").classList.add("hidden");
     $("#app").classList.remove("hidden");
+
 
     await loadAllData();
 }
@@ -2364,24 +2492,38 @@ async function saveOrder(event) {
 
     const payload = {
 
-        date_accepted: dateAccepted,
+    /*
+        user_id связывает заказ с конкретным аккаунтом
+        Supabase Auth.
 
-        date_submitted: dateSubmitted,
+        RLS затем проверяет:
 
-        type_work: typeWork,
+            user_id = auth.uid()
 
-        description: description,
+        Поэтому другой авторизованный пользователь
+        не сможет увидеть или изменить этот заказ.
+    */
 
-        price: price,
+    user_id: currentUser.id,
 
-        tips: tips,
+    date_accepted: dateAccepted,
 
-        hours_spent: hoursSpent,
+    date_submitted: dateSubmitted,
 
-        date_paid: datePaid,
+    type_work: typeWork,
 
-        status: status
-    };
+    description: description,
+
+    price: price,
+
+    tips: tips,
+
+    hours_spent: hoursSpent,
+
+    date_paid: datePaid,
+
+    status: status
+};
 
 
     try {
@@ -2391,19 +2533,40 @@ async function saveOrder(event) {
 
         if (id) {
 
-            response =
-                await supabaseClient
-                    .from("orders")
-                    .update(payload)
-                    .eq("id", id);
+    /*
+        При редактировании НЕ передаем user_id
+        из формы.
 
-        } else {
+        RLS проверит существующий user_id строки
+        через auth.uid().
+    */
 
-            response =
-                await supabaseClient
-                    .from("orders")
-                    .insert(payload);
-        }
+    const updatePayload = {
+        date_accepted: dateAccepted,
+        date_submitted: dateSubmitted,
+        type_work: typeWork,
+        description: description,
+        price: price,
+        tips: tips,
+        hours_spent: hoursSpent,
+        date_paid: datePaid,
+        status: status
+    };
+
+
+    response =
+        await supabaseClient
+            .from("orders")
+            .update(updatePayload)
+            .eq("id", id);
+
+} else {
+
+    response =
+        await supabaseClient
+            .from("orders")
+            .insert(payload);
+}
 
 
         if (response.error) {
@@ -2546,12 +2709,13 @@ async function saveWithdrawal(event) {
     try {
 
         const response =
-            await supabaseClient
-                .from("withdrawals")
-                .insert({
-                    date_withdrawal: date,
-                    amount: amount
-                });
+    await supabaseClient
+        .from("withdrawals")
+        .insert({
+            user_id: currentUser.id,
+            date_withdrawal: date,
+            amount: amount
+        });
 
 
         if (response.error) {
@@ -3832,7 +3996,180 @@ $("#setupForm")
                 key
             );
 
+            /* ============================================================
+   SUPABASE AUTH
+   ============================================================ */
 
+$("#loginForm")
+    .addEventListener(
+        "submit",
+        async event => {
+
+            event.preventDefault();
+
+
+            const email =
+                $("#loginEmail")
+                    .value
+                    .trim();
+
+            const password =
+                $("#loginPassword")
+                    .value;
+
+
+            if (!email || !password) {
+
+                showToast(
+                    "Введите email и пароль",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            try {
+
+                const {
+                    data,
+                    error
+                } = await supabaseClient.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+
+                if (error) {
+                    throw error;
+                }
+
+
+                currentUser =
+                    data.user;
+
+
+                $("#authScreen")
+                    .classList
+                    .add("hidden");
+
+                $("#app")
+                    .classList
+                    .remove("hidden");
+
+
+                showToast("Вы успешно вошли");
+
+
+                await loadAllData();
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                showToast(
+                    "Ошибка входа: " +
+                    (
+                        error.message ||
+                        "неверный email или пароль"
+                    ),
+                    "error"
+                );
+            }
+        }
+    );
+
+
+$("#logoutButton")
+    .addEventListener(
+        "click",
+        async () => {
+
+            try {
+
+                const {
+                    error
+                } = await supabaseClient.auth.signOut();
+
+
+                if (error) {
+                    throw error;
+                }
+
+
+                currentUser = null;
+
+                orders = [];
+                withdrawals = [];
+
+
+                if (currentChart) {
+                    currentChart.destroy();
+                    currentChart = null;
+                }
+
+
+                $("#app")
+                    .classList
+                    .add("hidden");
+
+                $("#authScreen")
+                    .classList
+                    .remove("hidden");
+
+
+                $("#loginForm").reset();
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                showToast(
+                    "Ошибка выхода: " +
+                    error.message,
+                    "error"
+                );
+            }
+        }
+    );
+
+
+/*
+    Если пользователь вошел/вышел в другой вкладке,
+    приложение автоматически реагирует на изменение сессии.
+*/
+
+supabaseClient?.auth.onAuthStateChange(
+    (event, session) => {
+
+        if (event === "SIGNED_OUT") {
+
+            currentUser = null;
+
+            $("#app")
+                .classList
+                .add("hidden");
+
+            $("#authScreen")
+                .classList
+                .remove("hidden");
+
+            return;
+        }
+
+
+        if (
+            event === "SIGNED_IN" &&
+            session
+        ) {
+
+            currentUser =
+                session.user;
+        }
+    }
+);
             startApplication();
         }
     );
