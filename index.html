@@ -2,56 +2,81 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Freelance Finance Dashboard</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <title>Freelance Finance</title>
 
-    <!-- Supabase JS -->
+    <!-- =====================================================
+         SUPABASE CDN
+         ===================================================== -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <!-- =====================================================
+         CHART.JS CDN
+         ===================================================== -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
     <style>
+
+        /* =====================================================
+           GLOBAL
+           ===================================================== */
+
         :root {
-            --bg: #f3f6f9;
-            --surface: #ffffff;
-            --surface-2: #f8fafc;
-            --text: #172033;
-            --muted: #687386;
-            --border: #e2e8f0;
+            --bg: #0f172a;
+            --bg-secondary: #111827;
+            --card: #1e293b;
+            --card-hover: #263449;
 
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
+            --border: #334155;
 
-            --green: #16a34a;
-            --red: #dc2626;
-            --orange: #ea580c;
-            --purple: #7c3aed;
+            --text: #f8fafc;
+            --text-secondary: #94a3b8;
+
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --purple: #8b5cf6;
+
+            --radius: 14px;
 
             --shadow:
-                0 10px 30px rgba(15, 23, 42, 0.07);
-
-            --radius: 16px;
+                0 10px 30px rgba(0, 0, 0, 0.25);
         }
+
 
         * {
             box-sizing: border-box;
         }
 
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+
         body {
             margin: 0;
-            background: var(--bg);
-            color: var(--text);
+
             font-family:
                 Inter,
-                ui-sans-serif,
                 system-ui,
                 -apple-system,
                 BlinkMacSystemFont,
                 "Segoe UI",
                 sans-serif;
+
+            background: var(--bg);
+            color: var(--text);
         }
+
 
         button,
         input,
@@ -60,666 +85,902 @@
             font: inherit;
         }
 
+
         button {
             cursor: pointer;
         }
+
 
         .hidden {
             display: none !important;
         }
 
-        /* =========================
-           SETUP SCREEN
-           ========================= */
 
-        .setup-screen {
+        /* =====================================================
+           AUTH / SETUP
+           ===================================================== */
+
+        .fullscreen {
             min-height: 100vh;
+
             display: flex;
             align-items: center;
             justify-content: center;
+
             padding: 20px;
+
+            background:
+                radial-gradient(
+                    circle at top,
+                    #1e3a5f 0,
+                    var(--bg) 45%
+                );
         }
 
-        .setup-card {
-            width: min(520px, 100%);
-            background: var(--surface);
-            padding: 34px;
-            border-radius: 24px;
+
+        .auth-card {
+            width: 100%;
+            max-width: 440px;
+
+            background: var(--card);
+
+            border: 1px solid var(--border);
+
+            border-radius: 20px;
+
+            padding: 32px;
+
             box-shadow: var(--shadow);
         }
 
-        .setup-card h1 {
-            margin: 0 0 10px;
+
+        .logo {
             font-size: 28px;
+            font-weight: 800;
+
+            margin-bottom: 8px;
         }
 
-        .setup-card p {
-            color: var(--muted);
+
+        .subtitle {
+            color: var(--text-secondary);
+
             line-height: 1.6;
+
+            margin-bottom: 28px;
         }
 
-        .security-note {
-            margin: 20px 0;
-            padding: 14px 16px;
-            border-radius: 12px;
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            color: #1e40af;
-            font-size: 14px;
-            line-height: 1.5;
+
+        /* =====================================================
+           FORMS
+           ===================================================== */
+
+        .form-group {
+            margin-bottom: 18px;
         }
 
-        /* =========================
-           APP LAYOUT
-           ========================= */
 
-        .app {
-            min-height: 100vh;
-        }
-
-        .topbar {
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 50;
-        }
-
-        .topbar-inner {
-            width: min(1500px, calc(100% - 32px));
-            margin: auto;
-            min-height: 72px;
-
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-        }
-
-        .brand h1 {
-            margin: 0;
-            font-size: 21px;
-        }
-
-        .brand span {
+        .form-group label {
             display: block;
-            color: var(--muted);
-            font-size: 13px;
-            margin-top: 3px;
+
+            margin-bottom: 7px;
+
+            font-size: 14px;
+            font-weight: 600;
         }
 
-        .topbar-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+
+            background: #0f172a;
+
+            color: var(--text);
+
+            border: 1px solid var(--border);
+
+            border-radius: 9px;
+
+            padding: 11px 13px;
+
+            outline: none;
+
+            transition:
+                border-color 0.2s,
+                box-shadow 0.2s;
         }
 
-        .container {
-            width: min(1500px, calc(100% - 32px));
-            margin: 28px auto 60px;
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--primary);
+
+            box-shadow:
+                0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
-        /* =========================
+
+        textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+
+        .form-row {
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 14px;
+        }
+
+
+        .required {
+            color: #f87171;
+        }
+
+
+        /* =====================================================
            BUTTONS
-           ========================= */
+           ===================================================== */
 
         .btn {
             border: 0;
-            border-radius: 10px;
+
+            border-radius: 9px;
+
             padding: 10px 15px;
-            transition: 0.15s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 7px;
-            white-space: nowrap;
+
+            color: white;
+
+            font-weight: 600;
+
+            transition:
+                transform 0.15s,
+                background 0.15s,
+                opacity 0.15s;
         }
 
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+
         .btn-primary {
-            color: white;
             background: var(--primary);
         }
+
 
         .btn-primary:hover {
             background: var(--primary-hover);
         }
 
+
         .btn-secondary {
-            background: #eef2f7;
-            color: var(--text);
+            background: #334155;
         }
+
 
         .btn-secondary:hover {
-            background: #e2e8f0;
+            background: #475569;
         }
+
 
         .btn-danger {
-            color: white;
-            background: var(--red);
+            background: var(--danger);
         }
+
+
+        .btn-success {
+            background: var(--success);
+        }
+
 
         .btn-small {
-            padding: 7px 10px;
-            font-size: 13px;
+            padding: 6px 9px;
+            font-size: 12px;
         }
 
-        /* =========================
-           DASHBOARD CARDS
-           ========================= */
 
-        .balance-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 18px;
-            margin-bottom: 24px;
+        /* =====================================================
+           APP
+           ===================================================== */
+
+        .app {
+            min-height: 100vh;
         }
 
-        .balance-card {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 22px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-        }
 
-        .balance-card .label {
-            color: var(--muted);
-            font-size: 14px;
-        }
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
 
-        .balance-card .value {
-            margin-top: 9px;
-            font-size: clamp(24px, 3vw, 34px);
-            font-weight: 750;
-        }
+            background:
+                rgba(15, 23, 42, 0.92);
 
-        .balance-card.green .value {
-            color: var(--green);
-        }
+            backdrop-filter: blur(12px);
 
-        .balance-card.blue .value {
-            color: var(--primary);
-        }
+            border-bottom: 1px solid var(--border);
 
-        .balance-card.orange .value {
-            color: var(--orange);
-        }
+            padding: 15px 25px;
 
-        /* =========================
-           SECTIONS
-           ========================= */
-
-        .section {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 22px;
-            margin-bottom: 24px;
-        }
-
-        .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 18px;
+
+            gap: 20px;
         }
 
-        .section-header h2 {
-            margin: 0;
+
+        .topbar-title {
             font-size: 20px;
+            font-weight: 800;
         }
 
-        .section-header p {
-            margin: 5px 0 0;
-            color: var(--muted);
-            font-size: 14px;
+
+        .topbar-user {
+            color: var(--text-secondary);
+
+            font-size: 12px;
+
+            margin-top: 3px;
         }
 
-        /* =========================
-           FILTERS
-           ========================= */
 
-        .filters {
+        .topbar-actions {
             display: flex;
+
             flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 18px;
+
+            gap: 8px;
         }
 
-        .field {
-            display: flex;
-            flex-direction: column;
-            gap: 7px;
+
+        .container {
+            width: min(1500px, 100%);
+
+            margin: 0 auto;
+
+            padding: 25px;
         }
 
-        .field label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #475569;
+
+        .section {
+            margin-bottom: 28px;
         }
 
-        .field input,
-        .field select,
-        .field textarea {
-            width: 100%;
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 800;
+
+            margin-bottom: 15px;
+        }
+
+
+        /* =====================================================
+           BALANCE CARDS
+           ===================================================== */
+
+        .cards {
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, minmax(0, 1fr));
+
+            gap: 18px;
+        }
+
+
+        .balance-card {
+            background: var(--card);
+
             border: 1px solid var(--border);
-            border-radius: 10px;
-            background: var(--surface);
-            color: var(--text);
-            padding: 10px 12px;
-            outline: none;
+
+            border-radius: var(--radius);
+
+            padding: 22px;
+
+            box-shadow: var(--shadow);
         }
 
-        .field input:focus,
-        .field select:focus,
-        .field textarea:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
 
-        .filter-field {
-            min-width: 190px;
-        }
+        .balance-card-title {
+            color: var(--text-secondary);
 
-        /* =========================
-           TABLE
-           ========================= */
-
-        .table-wrapper {
-            width: 100%;
-            overflow-x: auto;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-        }
-
-        table {
-            width: 100%;
-            min-width: 1150px;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            padding: 12px 13px;
-            border-bottom: 1px solid var(--border);
-            text-align: left;
-            vertical-align: middle;
             font-size: 14px;
+
+            margin-bottom: 10px;
         }
 
-        th {
-            background: var(--surface-2);
-            color: #475569;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            white-space: nowrap;
+
+        .balance-card-value {
+            font-size: 30px;
+
+            font-weight: 800;
         }
 
-        tr:last-child td {
-            border-bottom: 0;
+
+        .balance-card:nth-child(1)
+        .balance-card-value {
+            color: #60a5fa;
         }
 
-        .status-badge {
-            display: inline-flex;
-            border-radius: 999px;
-            padding: 5px 9px;
-            font-size: 12px;
-            font-weight: 650;
-            white-space: nowrap;
+
+        .balance-card:nth-child(2)
+        .balance-card-value {
+            color: #4ade80;
         }
 
-        .status-work {
-            background: #dbeafe;
-            color: #1d4ed8;
+
+        .balance-card:nth-child(3)
+        .balance-card-value {
+            color: #fbbf24;
         }
 
-        .status-check {
-            background: #fef3c7;
-            color: #92400e;
-        }
 
-        .status-rework {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .status-paid {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .status-cancelled {
-            background: #e5e7eb;
-            color: #374151;
-        }
-
-        tr.row-rework {
-            background: #fff1f2;
-        }
-
-        tr.row-paid {
-            background: #f0fdf4;
-        }
-
-        tr.row-check {
-            background: #fffbeb;
-        }
-
-        tr.row-cancelled {
-            background: #f8fafc;
-            color: #64748b;
-        }
-
-        .actions {
-            display: flex;
-            gap: 6px;
-        }
-
-        .empty {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--muted);
-        }
-
-        /* =========================
+        /* =====================================================
            ANALYTICS
-           ========================= */
+           ===================================================== */
 
         .analytics-grid {
             display: grid;
-            grid-template-columns: 1.1fr 1fr;
+
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+
             gap: 18px;
         }
 
-        .analytics-card {
+
+        .panel {
+            background: var(--card);
+
             border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 18px;
-        }
 
-        .analytics-card h3 {
-            margin: 0 0 14px;
-            font-size: 16px;
-        }
+            border-radius: var(--radius);
 
-        .big-number {
-            font-size: 30px;
-            font-weight: 750;
-        }
-
-        .year-list,
-        .month-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        .year-list li,
-        .month-list li {
-            display: flex;
-            justify-content: space-between;
-            padding: 9px 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .year-list li:last-child,
-        .month-list li:last-child {
-            border-bottom: 0;
-        }
-
-        .work-rating {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .work-rating th,
-        .work-rating td {
-            font-size: 13px;
-            padding: 9px;
-        }
-
-        /* =========================
-           CHARTS
-           ========================= */
-
-        .chart-controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 18px;
-        }
-
-        .chart-tab {
-            border: 1px solid var(--border);
-            background: var(--surface);
-            color: var(--text);
-            border-radius: 9px;
-            padding: 9px 13px;
-        }
-
-        .chart-tab.active {
-            color: white;
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-
-        .chart-container {
-            height: 380px;
-            position: relative;
-        }
-
-        /* =========================
-           MODAL
-           ========================= */
-
-        .modal-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.55);
-            z-index: 100;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
             padding: 20px;
         }
 
-        .modal {
-            width: min(720px, 100%);
-            max-height: calc(100vh - 40px);
-            overflow-y: auto;
 
-            background: var(--surface);
-            border-radius: 20px;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
+        .panel h3 {
+            margin-top: 0;
         }
 
-        .modal-header {
-            padding: 20px 22px;
-            border-bottom: 1px solid var(--border);
+
+        .stat-list {
+            list-style: none;
+
+            padding: 0;
+            margin: 0;
+        }
+
+
+        .stat-list li {
+            display: flex;
+
+            justify-content: space-between;
+
+            gap: 15px;
+
+            padding: 9px 0;
+
+            border-bottom:
+                1px solid rgba(148, 163, 184, 0.12);
+        }
+
+
+        .stat-list li:last-child {
+            border-bottom: 0;
+        }
+
+
+        .stat-value {
+            font-weight: 700;
+        }
+
+
+        .year-select {
+            max-width: 180px;
+
+            margin-bottom: 15px;
+        }
+
+
+        /* =====================================================
+           CHARTS
+           ===================================================== */
+
+        .chart-tabs {
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 8px;
+
+            margin-bottom: 18px;
+        }
+
+
+        .chart-tab {
+            background: #334155;
+
+            color: white;
+
+            border: 0;
+
+            border-radius: 8px;
+
+            padding: 9px 14px;
+        }
+
+
+        .chart-tab.active {
+            background: var(--primary);
+        }
+
+
+        .chart-container {
+            position: relative;
+
+            width: 100%;
+
+            height: 400px;
+        }
+
+
+        /* =====================================================
+           FILTERS
+           ===================================================== */
+
+        .filters {
+            display: grid;
+
+            grid-template-columns:
+                1fr 1fr auto;
+
+            gap: 12px;
+
+            margin-bottom: 15px;
+        }
+
+
+        /* =====================================================
+           TABLE
+           ===================================================== */
+
+        .table-wrapper {
+            overflow-x: auto;
+
+            border:
+                1px solid var(--border);
+
+            border-radius: var(--radius);
+        }
+
+
+        table {
+            width: 100%;
+
+            min-width: 1150px;
+
+            border-collapse: collapse;
+        }
+
+
+        th,
+        td {
+            padding: 11px 10px;
+
+            text-align: left;
+
+            border-bottom:
+                1px solid rgba(148, 163, 184, 0.12);
+
+            white-space: nowrap;
+        }
+
+
+        th {
+            color: var(--text-secondary);
+
+            font-size: 12px;
+
+            text-transform: uppercase;
+
+            background: #172235;
+        }
+
+
+        tbody tr {
+            transition:
+                background 0.15s;
+        }
+
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+
+        .status {
+            display: inline-block;
+
+            padding: 5px 8px;
+
+            border-radius: 999px;
+
+            font-size: 11px;
+
+            font-weight: 700;
+        }
+
+
+        .status-work {
+            background: rgba(59, 130, 246, 0.18);
+            color: #60a5fa;
+        }
+
+
+        .status-check {
+            background: rgba(245, 158, 11, 0.18);
+            color: #fbbf24;
+        }
+
+
+        .status-rework {
+            background: rgba(239, 68, 68, 0.18);
+            color: #f87171;
+        }
+
+
+        .status-paid {
+            background: rgba(34, 197, 94, 0.18);
+            color: #4ade80;
+        }
+
+
+        .status-cancelled {
+            background: rgba(148, 163, 184, 0.18);
+            color: #94a3b8;
+        }
+
+
+        tr.row-rework {
+            background:
+                rgba(239, 68, 68, 0.08);
+        }
+
+
+        tr.row-paid {
+            background:
+                rgba(34, 197, 94, 0.07);
+        }
+
+
+        tr.row-cancelled {
+            opacity: 0.65;
+        }
+
+
+        .actions {
+            display: flex;
+
+            gap: 5px;
+        }
+
+
+        /* =====================================================
+           MODALS
+           ===================================================== */
+
+        .modal {
+            position: fixed;
+
+            inset: 0;
+
+            z-index: 100;
 
             display: flex;
-            justify-content: space-between;
+
             align-items: center;
-            gap: 15px;
+            justify-content: center;
+
+            padding: 20px;
+
+            background:
+                rgba(0, 0, 0, 0.7);
         }
+
+
+        .modal-content {
+            width: 100%;
+
+            max-width: 650px;
+
+            max-height: 90vh;
+
+            overflow-y: auto;
+
+            background: var(--card);
+
+            border:
+                1px solid var(--border);
+
+            border-radius: 18px;
+
+            padding: 25px;
+
+            box-shadow: var(--shadow);
+        }
+
+
+        .modal-header {
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 20px;
+        }
+
 
         .modal-header h2 {
             margin: 0;
         }
 
+
         .modal-close {
-            width: 34px;
-            height: 34px;
+            background: transparent;
+
             border: 0;
-            border-radius: 8px;
-            background: #f1f5f9;
-            font-size: 20px;
+
+            color: var(--text-secondary);
+
+            font-size: 26px;
         }
 
-        .modal-body {
-            padding: 22px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-        }
-
-        .form-grid .full {
-            grid-column: 1 / -1;
-        }
 
         .modal-footer {
-            padding: 16px 22px;
-            border-top: 1px solid var(--border);
-
             display: flex;
+
             justify-content: flex-end;
-            gap: 10px;
+
+            gap: 8px;
+
+            margin-top: 20px;
         }
 
-        .error-message {
-            color: var(--red);
-            font-size: 13px;
-            margin-top: 5px;
-        }
 
-        /* =========================
+        /* =====================================================
            TOAST
-           ========================= */
+           ===================================================== */
 
-        .toast-container {
+        #toastContainer {
             position: fixed;
+
             right: 20px;
             bottom: 20px;
+
             z-index: 200;
 
             display: flex;
+
             flex-direction: column;
+
             gap: 10px;
         }
 
+
         .toast {
             min-width: 280px;
-            max-width: 400px;
+
+            max-width: 420px;
+
             padding: 13px 16px;
-            border-radius: 12px;
-            color: white;
+
+            border-radius: 10px;
+
+            background: #1e293b;
+
+            border: 1px solid var(--border);
+
             box-shadow: var(--shadow);
-            animation: toastIn 0.2s ease;
         }
+
 
         .toast.success {
-            background: #16a34a;
+            border-color: var(--success);
         }
+
 
         .toast.error {
-            background: #dc2626;
+            border-color: var(--danger);
         }
 
-        @keyframes toastIn {
-            from {
-                transform: translateY(10px);
-                opacity: 0;
-            }
 
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+        /* =====================================================
+           EMPTY
+           ===================================================== */
+
+        .empty {
+            text-align: center;
+
+            padding: 35px;
+
+            color: var(--text-secondary);
         }
 
-        /* =========================
+
+        /* =====================================================
            RESPONSIVE
-           ========================= */
+           ===================================================== */
 
         @media (max-width: 1000px) {
-            .balance-grid {
+
+            .cards {
                 grid-template-columns: 1fr;
             }
+
 
             .analytics-grid {
                 grid-template-columns: 1fr;
             }
+
         }
 
+
         @media (max-width: 700px) {
-            .topbar-inner {
+
+            .topbar {
                 align-items: flex-start;
-                padding: 14px 0;
+
                 flex-direction: column;
             }
 
-            .topbar-actions {
-                width: 100%;
-            }
-
-            .topbar-actions .btn {
-                flex: 1;
-            }
 
             .container {
-                width: min(100% - 20px, 1500px);
-                margin-top: 15px;
-            }
-
-            .section {
                 padding: 15px;
             }
 
-            .section-header {
-                align-items: flex-start;
-                flex-direction: column;
-            }
 
-            .form-grid {
+            .form-row {
                 grid-template-columns: 1fr;
             }
 
-            .form-grid .full {
-                grid-column: auto;
+
+            .filters {
+                grid-template-columns: 1fr;
             }
+
+
+            .balance-card-value {
+                font-size: 25px;
+            }
+
 
             .chart-container {
                 height: 300px;
             }
 
-            .setup-card {
-                padding: 24px;
-            }
         }
+
     </style>
 </head>
+
 
 <body>
 
 <!-- =========================================================
      SETUP SCREEN
-     Показывается, если Supabase credentials еще не сохранены.
      ========================================================= -->
+
+<div
+    id="setupScreen"
+    class="fullscreen hidden"
+>
+
+    <div class="auth-card">
+
+        <div class="logo">
+            💰 Freelance Finance
+        </div>
+
+        <div class="subtitle">
+            При первом запуске укажите параметры
+            подключения к вашему проекту Supabase.
+            Они будут сохранены только в этом браузере.
+        </div>
+
+
+        <form id="setupForm">
+
+            <div class="form-group">
+
+                <label for="supabaseUrl">
+                    Supabase URL
+                </label>
+
+                <input
+                    id="supabaseUrl"
+                    type="url"
+                    placeholder="https://xxxxxxxx.supabase.co"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="supabaseKey">
+                    Supabase anon / publishable key
+                </label>
+
+                <input
+                    id="supabaseKey"
+                    type="password"
+                    placeholder="Ваш публичный ключ"
+                    required
+                >
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+                style="width:100%;"
+            >
+                Подключиться
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
 <!-- =========================================================
-     AUTH SCREEN
+     LOGIN SCREEN
      ========================================================= -->
 
-<div id="authScreen" class="setup-screen hidden">
+<div
+    id="authScreen"
+    class="fullscreen hidden"
+>
 
-    <div class="setup-card">
+    <div class="auth-card">
 
-        <h1>Вход в Freelance Finance</h1>
+        <div class="logo">
+            🔐 Freelance Finance
+        </div>
 
-        <p>
-            Войдите в свой аккаунт, чтобы получить доступ
-            к личным финансовым данным.
-        </p>
+        <div class="subtitle">
+            Войдите в свой личный аккаунт.
+            Регистрация новых пользователей отключена.
+        </div>
+
 
         <form id="loginForm">
 
-            <div class="field">
+            <div class="form-group">
+
                 <label for="loginEmail">
                     Email
                 </label>
@@ -730,11 +991,12 @@
                     autocomplete="email"
                     required
                 >
+
             </div>
 
-            <br>
 
-            <div class="field">
+            <div class="form-group">
+
                 <label for="loginPassword">
                     Пароль
                 </label>
@@ -745,13 +1007,14 @@
                     autocomplete="current-password"
                     required
                 >
+
             </div>
 
-            <br>
 
             <button
-                class="btn btn-primary"
+                id="loginButton"
                 type="submit"
+                class="btn btn-primary"
                 style="width:100%;"
             >
                 Войти
@@ -762,263 +1025,98 @@
     </div>
 
 </div>
-    
-<div id="setupScreen" class="setup-screen hidden">
-    <div class="setup-card">
-        <h1>Настройка приложения</h1>
-
-        <p>
-            Для подключения приложения к вашей базе Supabase введите
-            URL проекта и публичный anon/publishable key.
-        </p>
-
-        <div class="security-note">
-            Ключи будут сохранены только в localStorage этого браузера
-            и не будут записаны в GitHub-репозиторий.
-            <br><br>
-            <strong>Не вводите здесь service_role key.</strong>
-        </div>
-
-        <form id="setupForm">
-
-            <div class="field">
-                <label for="supabaseUrl">Supabase Project URL</label>
-                <input
-                    id="supabaseUrl"
-                    type="url"
-                    placeholder="https://xxxxxxxx.supabase.co"
-                    required
-                >
-            </div>
-
-            <br>
-
-            <div class="field">
-                <label for="supabaseKey">Supabase anon / publishable key</label>
-                <textarea
-                    id="supabaseKey"
-                    rows="4"
-                    placeholder="eyJhbGciOi..."
-                    required
-                ></textarea>
-            </div>
-
-            <br>
-
-            <button class="btn btn-primary" type="submit">
-                Подключить базу
-            </button>
-
-        </form>
-    </div>
-</div>
 
 
 <!-- =========================================================
-     MAIN APP
+     MAIN APPLICATION
      ========================================================= -->
 
-<div id="app" class="app hidden">
+<div
+    id="app"
+    class="app hidden"
+>
+
+    <!-- TOPBAR -->
 
     <header class="topbar">
-        <div class="topbar-inner">
 
-            <div class="brand">
-                <h1>Freelance Finance</h1>
-                <span>Личный учет доходов</span>
+        <div>
+
+            <div class="topbar-title">
+                💰 Freelance Finance
             </div>
 
-            <div class="topbar-actions">
-                <button
-                    class="btn btn-secondary"
-                    id="settingsButton"
-                >
-                    ⚙ Настройки
-                </button>
-
-                <button
-                    class="btn btn-primary"
-                    id="addOrderButton"
-                >
-                    + Добавить заказ
-                </button>
-
-                <button
-                    class="btn btn-secondary"
-                    id="withdrawalButton"
-                >
-                    ↓ Вывод средств
-                </button>
-                <button
-    class="btn btn-secondary"
-    id="logoutButton"
->
-    Выйти
-</button>
-            </div>
+            <div
+                id="currentUserEmail"
+                class="topbar-user"
+            ></div>
 
         </div>
+
+
+        <div class="topbar-actions">
+
+            <button
+                id="settingsButton"
+                class="btn btn-secondary"
+            >
+                ⚙ Настройки
+            </button>
+
+
+            <button
+                id="withdrawalButton"
+                class="btn btn-secondary"
+            >
+                ↓ Зафиксировать вывод
+            </button>
+
+
+            <button
+                id="addOrderButton"
+                class="btn btn-primary"
+            >
+                + Добавить заказ
+            </button>
+
+
+            <button
+                id="logoutButton"
+                class="btn btn-danger"
+            >
+                Выйти
+            </button>
+
+        </div>
+
     </header>
 
 
     <main class="container">
 
-        <!-- =========================
+
+        <!-- =================================================
              BALANCE
-             ========================= -->
-
-        <section class="balance-grid">
-
-            <div class="balance-card blue">
-                <div class="label">
-                    Текущий баланс на бирже
-                </div>
-
-                <div
-                    class="value"
-                    id="currentBalance"
-                >
-                    0 ₽
-                </div>
-            </div>
-
-            <div class="balance-card green">
-                <div class="label">
-                    Баланс к получению с учетом комиссии
-                </div>
-
-                <div
-                    class="value"
-                    id="balanceAfterFee"
-                >
-                    0 ₽
-                </div>
-            </div>
-
-            <div class="balance-card orange">
-                <div class="label">
-                    В работе / На проверке
-                </div>
-
-                <div
-                    class="value"
-                    id="pendingBalance"
-                >
-                    0 ₽
-                </div>
-            </div>
-
-        </section>
-
-
-        <!-- =========================
-             ORDERS
-             ========================= -->
+             ================================================= -->
 
         <section class="section">
 
-            <div class="section-header">
-                <div>
-                    <h2>Заказы</h2>
-                    <p>
-                        Все заказы и их текущие статусы
-                    </p>
-                </div>
-            </div>
-
-            <div class="filters">
-
-                <div class="field filter-field">
-                    <label for="statusFilter">
-                        Статус
-                    </label>
-
-                    <select id="statusFilter">
-                        <option value="">Все статусы</option>
-                        <option>В работе</option>
-                        <option>На проверке</option>
-                        <option>На доработке</option>
-                        <option>Оплачен</option>
-                        <option>Отменен</option>
-                    </select>
-                </div>
-
-
-                <div class="field filter-field">
-                    <label for="typeFilter">
-                        Тип работы
-                    </label>
-
-                    <select id="typeFilter">
-                        <option value="">Все типы</option>
-                        <option>Диплом</option>
-                        <option>Курсовая</option>
-                        <option>Реферат</option>
-                        <option>Контрольная</option>
-                        <option>Задача</option>
-                        <option>Другое</option>
-                    </select>
-                </div>
-
+            <div class="section-title">
+                Финансовый баланс
             </div>
 
 
-            <div class="table-wrapper">
+            <div class="cards">
 
-                <table>
+                <div class="balance-card">
 
-                    <thead>
-                    <tr>
-                        <th>Принят</th>
-                        <th>Сдан</th>
-                        <th>Тип</th>
-                        <th>Описание</th>
-                        <th>Цена</th>
-                        <th>Чаевые</th>
-                        <th>Часы</th>
-                        <th>Р/час</th>
-                        <th>Оплачен</th>
-                        <th>Статус</th>
-                        <th>Действия</th>
-                    </tr>
-                    </thead>
-
-                    <tbody id="ordersTableBody"></tbody>
-
-                </table>
-
-            </div>
-
-        </section>
-
-
-        <!-- =========================
-             ANALYTICS
-             ========================= -->
-
-        <section class="section">
-
-            <div class="section-header">
-                <div>
-                    <h2>Аналитика</h2>
-                    <p>
-                        Расчеты выполняются только по оплаченным заказам
-                    </p>
-                </div>
-            </div>
-
-
-            <div class="analytics-grid">
-
-                <div class="analytics-card">
-
-                    <h3>
-                        Заработано за все время
-                    </h3>
+                    <div class="balance-card-title">
+                        Текущий баланс на бирже
+                    </div>
 
                     <div
-                        id="allTimeIncome"
-                        class="big-number"
+                        id="currentBalance"
+                        class="balance-card-value"
                     >
                         0 ₽
                     </div>
@@ -1026,88 +1124,34 @@
                 </div>
 
 
-                <div class="analytics-card">
+                <div class="balance-card">
 
-                    <h3>
-                        Средний заработок в день
-                    </h3>
-
-                    <div id="dailyAverages"></div>
-
-                </div>
-
-
-                <div class="analytics-card">
-
-                    <h3>
-                        Заработок по годам
-                    </h3>
-
-                    <ul
-                        class="year-list"
-                        id="yearIncomeList"
-                    ></ul>
-
-                </div>
-
-
-                <div class="analytics-card">
-
-                    <div
-                        style="
-                            display:flex;
-                            justify-content:space-between;
-                            align-items:center;
-                            gap:10px;
-                            margin-bottom:12px;
-                        "
-                    >
-                        <h3 style="margin:0">
-                            По месяцам
-                        </h3>
-
-                        <select
-                            id="analyticsYear"
-                            style="
-                                padding:8px;
-                                border:1px solid var(--border);
-                                border-radius:8px;
-                            "
-                        ></select>
+                    <div class="balance-card-title">
+                        Баланс к получению
+                        с учетом комиссии 2.5%
                     </div>
 
-                    <ul
-                        class="month-list"
-                        id="monthIncomeList"
-                    ></ul>
+                    <div
+                        id="withdrawableBalance"
+                        class="balance-card-value"
+                    >
+                        0 ₽
+                    </div>
 
                 </div>
 
 
-                <div class="analytics-card"
-                     style="grid-column:1 / -1">
+                <div class="balance-card">
 
-                    <h3>
-                        Рейтинг типов работ
-                    </h3>
+                    <div class="balance-card-title">
+                        В работе / На проверке
+                    </div>
 
-                    <div class="table-wrapper">
-
-                        <table class="work-rating">
-
-                            <thead>
-                            <tr>
-                                <th>Тип работы</th>
-                                <th>Заказов</th>
-                                <th>Доход</th>
-                                <th>Средний Р/час</th>
-                            </tr>
-                            </thead>
-
-                            <tbody id="workRatingBody"></tbody>
-
-                        </table>
-
+                    <div
+                        id="pendingBalance"
+                        class="balance-card-value"
+                    >
+                        0 ₽
                     </div>
 
                 </div>
@@ -1117,84 +1161,419 @@
         </section>
 
 
-        <!-- =========================
-             CHARTS
-             ========================= -->
+        <!-- =================================================
+             ANALYTICS
+             ================================================= -->
 
         <section class="section">
 
-            <div class="section-header">
+            <div class="section-title">
+                Аналитика
+            </div>
 
-                <div>
-                    <h2>Графики</h2>
-                    <p>
-                        Доход рассчитывается по date_paid
-                    </p>
+
+            <div class="analytics-grid">
+
+
+                <!-- ALL TIME -->
+
+                <div class="panel">
+
+                    <h3>
+                        Общая статистика
+                    </h3>
+
+                    <ul class="stat-list">
+
+                        <li>
+                            <span>
+                                Заработано за всё время
+                            </span>
+
+                            <span
+                                id="allTimeIncome"
+                                class="stat-value"
+                            >
+                                0 ₽
+                            </span>
+                        </li>
+
+
+                        <li>
+                            <span>
+                                Средний заработок в день
+                            </span>
+
+                            <span
+                                id="averageDayAllTime"
+                                class="stat-value"
+                            >
+                                0 ₽
+                            </span>
+                        </li>
+
+
+                        <li>
+                            <span>
+                                Средний заработок в день
+                                за текущий год
+                            </span>
+
+                            <span
+                                id="averageDayCurrentYear"
+                                class="stat-value"
+                            >
+                                0 ₽
+                            </span>
+                        </li>
+
+
+                        <li>
+                            <span>
+                                Средний заработок в день
+                                за текущий месяц
+                            </span>
+
+                            <span
+                                id="averageDayCurrentMonth"
+                                class="stat-value"
+                            >
+                                0 ₽
+                            </span>
+                        </li>
+
+                    </ul>
+
+                </div>
+
+
+                <!-- YEARS -->
+
+                <div class="panel">
+
+                    <h3>
+                        Заработок по годам
+                    </h3>
+
+                    <ul
+                        id="yearIncomeList"
+                        class="stat-list"
+                    ></ul>
+
+                </div>
+
+
+                <!-- MONTHS -->
+
+                <div class="panel">
+
+                    <h3>
+                        Заработок по месяцам
+                    </h3>
+
+                    <select
+                        id="analyticsYear"
+                        class="year-select"
+                    ></select>
+
+
+                    <ul
+                        id="monthIncomeList"
+                        class="stat-list"
+                    ></ul>
+
+                </div>
+
+
+                <!-- TYPES -->
+
+                <div class="panel">
+
+                    <h3>
+                        Рейтинг типов работ
+                    </h3>
+
+                    <ul
+                        id="typeRankingList"
+                        class="stat-list"
+                    ></ul>
+
                 </div>
 
             </div>
 
+        </section>
 
-            <div class="chart-controls">
 
-                <button
-                    class="chart-tab active"
-                    data-chart="years"
-                >
-                    По годам
-                </button>
+        <!-- =================================================
+             CHARTS
+             ================================================= -->
 
-                <button
-                    class="chart-tab"
-                    data-chart="months"
-                >
-                    По месяцам
-                </button>
+        <section class="section">
 
-                <button
-                    class="chart-tab"
-                    data-chart="days"
-                >
-                    По дням
-                </button>
-
+            <div class="section-title">
+                Графики
             </div>
 
 
-            <div
-                id="chartFilters"
-                style="
-                    display:flex;
-                    gap:10px;
-                    margin-bottom:15px;
-                    flex-wrap:wrap;
-                "
-            >
+            <div class="panel">
 
-                <div class="field">
-                    <label for="chartYear">
-                        Год
-                    </label>
+                <div class="chart-tabs">
 
-                    <select id="chartYear"></select>
+                    <button
+                        class="chart-tab active"
+                        data-chart="years"
+                    >
+                        По годам
+                    </button>
+
+                    <button
+                        class="chart-tab"
+                        data-chart="months"
+                    >
+                        По месяцам
+                    </button>
+
+                    <button
+                        class="chart-tab"
+                        data-chart="days"
+                    >
+                        По дням
+                    </button>
+
                 </div>
+
 
                 <div
-                    class="field"
-                    id="chartMonthWrapper"
+                    id="dailyChartControls"
+                    class="hidden"
+                    style="margin-bottom:15px;"
                 >
-                    <label for="chartMonth">
-                        Месяц
-                    </label>
 
-                    <select id="chartMonth"></select>
+                    <select
+                        id="chartMonth"
+                        style="max-width:220px;"
+                    ></select>
+
+                </div>
+
+
+                <div class="chart-container">
+
+                    <canvas
+                        id="incomeChart"
+                    ></canvas>
+
                 </div>
 
             </div>
 
+        </section>
 
-            <div class="chart-container">
-                <canvas id="incomeChart"></canvas>
+
+        <!-- =================================================
+             ORDERS
+             ================================================= -->
+
+        <section class="section">
+
+            <div class="section-title">
+                Заказы
+            </div>
+
+
+            <div class="panel">
+
+                <div class="filters">
+
+                    <select id="statusFilter">
+
+                        <option value="">
+                            Все статусы
+                        </option>
+
+                        <option value="В работе">
+                            В работе
+                        </option>
+
+                        <option value="На проверке">
+                            На проверке
+                        </option>
+
+                        <option value="На доработке">
+                            На доработке
+                        </option>
+
+                        <option value="Оплачен">
+                            Оплачен
+                        </option>
+
+                        <option value="Отменен">
+                            Отменен
+                        </option>
+
+                    </select>
+
+
+                    <select id="typeFilter">
+
+                        <option value="">
+                            Все типы работ
+                        </option>
+
+                        <option value="Диплом">
+                            Диплом
+                        </option>
+
+                        <option value="Курсовая">
+                            Курсовая
+                        </option>
+
+                        <option value="Реферат">
+                            Реферат
+                        </option>
+
+                        <option value="Контрольная">
+                            Контрольная
+                        </option>
+
+                        <option value="Задача">
+                            Задача
+                        </option>
+
+                        <option value="Другое">
+                            Другое
+                        </option>
+
+                    </select>
+
+
+                    <button
+                        id="resetFilters"
+                        class="btn btn-secondary"
+                    >
+                        Сбросить
+                    </button>
+
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Принят
+                                </th>
+
+                                <th>
+                                    Отправлен
+                                </th>
+
+                                <th>
+                                    Тип
+                                </th>
+
+                                <th>
+                                    Описание
+                                </th>
+
+                                <th>
+                                    Цена
+                                </th>
+
+                                <th>
+                                    Чаевые
+                                </th>
+
+                                <th>
+                                    Часы
+                                </th>
+
+                                <th>
+                                    ₽/час
+                                </th>
+
+                                <th>
+                                    Оплачен
+                                </th>
+
+                                <th>
+                                    Статус
+                                </th>
+
+                                <th>
+                                    Действия
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody
+                            id="ordersTableBody"
+                        ></tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             WITHDRAWALS
+             ================================================= -->
+
+        <section class="section">
+
+            <div class="section-title">
+                Выводы средств
+            </div>
+
+
+            <div class="panel">
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Дата
+                                </th>
+
+                                <th>
+                                    Сумма
+                                </th>
+
+                                <th>
+                                    Действие
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody
+                            id="withdrawalsTableBody"
+                        ></tbody>
+
+                    </table>
+
+                </div>
+
             </div>
 
         </section>
@@ -1210,10 +1589,10 @@
 
 <div
     id="orderModal"
-    class="modal-backdrop hidden"
+    class="modal hidden"
 >
 
-    <div class="modal">
+    <div class="modal-content">
 
         <div class="modal-header">
 
@@ -1233,140 +1612,216 @@
 
         <form id="orderForm">
 
-            <div class="modal-body">
-
-                <input
-                    type="hidden"
-                    id="orderId"
-                >
-
-                <div class="form-grid">
-
-                    <div class="field">
-                        <label for="dateAccepted">
-                            Дата принятия *
-                        </label>
-
-                        <input
-                            id="dateAccepted"
-                            type="date"
-                            required
-                        >
-                    </div>
+            <input
+                type="hidden"
+                id="orderId"
+            >
 
 
-                    <div class="field">
-                        <label for="dateSubmitted">
-                            Дата отправки
-                        </label>
+            <div class="form-row">
 
-                        <input
-                            id="dateSubmitted"
-                            type="date"
-                        >
-                    </div>
+                <div class="form-group">
 
+                    <label>
+                        Дата принятия
+                        <span class="required">*</span>
+                    </label>
 
-                    <div class="field">
-                        <label for="typeWork">
-                            Тип работы *
-                        </label>
+                    <input
+                        id="dateAccepted"
+                        type="date"
+                        required
+                    >
 
-                        <select id="typeWork" required>
-                            <option value="">Выберите тип</option>
-                            <option>Диплом</option>
-                            <option>Курсовая</option>
-                            <option>Реферат</option>
-                            <option>Контрольная</option>
-                            <option>Задача</option>
-                            <option>Другое</option>
-                        </select>
-                    </div>
+                </div>
 
 
-                    <div class="field">
-                        <label for="orderStatus">
-                            Статус *
-                        </label>
+                <div class="form-group">
 
-                        <select id="orderStatus" required>
-                            <option>В работе</option>
-                            <option>На проверке</option>
-                            <option>На доработке</option>
-                            <option>Оплачен</option>
-                            <option>Отменен</option>
-                        </select>
-                    </div>
+                    <label>
+                        Дата отправки
+                    </label>
 
+                    <input
+                        id="dateSubmitted"
+                        type="date"
+                    >
 
-                    <div class="field full">
-                        <label for="description">
-                            Описание / название предмета *
-                        </label>
+                </div>
 
-                        <textarea
-                            id="description"
-                            rows="3"
-                            required
-                        ></textarea>
-                    </div>
+            </div>
 
 
-                    <div class="field">
-                        <label for="price">
-                            Цена *
-                        </label>
+            <div class="form-row">
 
-                        <input
-                            id="price"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            required
-                        >
-                    </div>
+                <div class="form-group">
+
+                    <label>
+                        Тип работы
+                        <span class="required">*</span>
+                    </label>
+
+                    <select
+                        id="typeWork"
+                        required
+                    >
+
+                        <option value="">
+                            Выберите тип
+                        </option>
+
+                        <option>
+                            Диплом
+                        </option>
+
+                        <option>
+                            Курсовая
+                        </option>
+
+                        <option>
+                            Реферат
+                        </option>
+
+                        <option>
+                            Контрольная
+                        </option>
+
+                        <option>
+                            Задача
+                        </option>
+
+                        <option>
+                            Другое
+                        </option>
+
+                    </select>
+
+                </div>
 
 
-                    <div class="field">
-                        <label for="tips">
-                            Чаевые
-                        </label>
+                <div class="form-group">
 
-                        <input
-                            id="tips"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value="0"
-                        >
-                    </div>
+                    <label>
+                        Статус
+                        <span class="required">*</span>
+                    </label>
+
+                    <select
+                        id="status"
+                        required
+                    >
+
+                        <option>
+                            В работе
+                        </option>
+
+                        <option>
+                            На проверке
+                        </option>
+
+                        <option>
+                            На доработке
+                        </option>
+
+                        <option>
+                            Оплачен
+                        </option>
+
+                        <option>
+                            Отменен
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
 
 
-                    <div class="field">
-                        <label for="hoursSpent">
-                            Затрачено часов *
-                        </label>
+            <div class="form-group">
 
-                        <input
-                            id="hoursSpent"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            required
-                        >
-                    </div>
+                <label>
+                    Описание / предмет
+                    <span class="required">*</span>
+                </label>
+
+                <textarea
+                    id="description"
+                    required
+                ></textarea>
+
+            </div>
 
 
-                    <div class="field">
-                        <label for="datePaid">
-                            Дата перечисления средств
-                        </label>
+            <div class="form-row">
 
-                        <input
-                            id="datePaid"
-                            type="date"
-                        >
-                    </div>
+                <div class="form-group">
+
+                    <label>
+                        Цена
+                        <span class="required">*</span>
+                    </label>
+
+                    <input
+                        id="price"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Чаевые
+                    </label>
+
+                    <input
+                        id="tips"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value="0"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label>
+                        Затрачено часов
+                        <span class="required">*</span>
+                    </label>
+
+                    <input
+                        id="hoursSpent"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Дата оплаты
+                    </label>
+
+                    <input
+                        id="datePaid"
+                        type="date"
+                    >
 
                 </div>
 
@@ -1382,6 +1837,7 @@
                 >
                     Отмена
                 </button>
+
 
                 <button
                     type="submit"
@@ -1405,15 +1861,15 @@
 
 <div
     id="withdrawalModal"
-    class="modal-backdrop hidden"
+    class="modal hidden"
 >
 
-    <div class="modal">
+    <div class="modal-content">
 
         <div class="modal-header">
 
             <h2>
-                Зафиксировать вывод средств
+                Зафиксировать вывод
             </h2>
 
             <button
@@ -1428,38 +1884,36 @@
 
         <form id="withdrawalForm">
 
-            <div class="modal-body">
+            <div class="form-group">
 
-                <div class="form-grid">
+                <label>
+                    Дата вывода
+                    <span class="required">*</span>
+                </label>
 
-                    <div class="field">
-                        <label for="withdrawalDate">
-                            Дата вывода *
-                        </label>
+                <input
+                    id="withdrawalDate"
+                    type="date"
+                    required
+                >
 
-                        <input
-                            id="withdrawalDate"
-                            type="date"
-                            required
-                        >
-                    </div>
+            </div>
 
 
-                    <div class="field">
-                        <label for="withdrawalAmount">
-                            Сумма *
-                        </label>
+            <div class="form-group">
 
-                        <input
-                            id="withdrawalAmount"
-                            type="number"
-                            step="0.01"
-                            min="0.01"
-                            required
-                        >
-                    </div>
+                <label>
+                    Сумма
+                    <span class="required">*</span>
+                </label>
 
-                </div>
+                <input
+                    id="withdrawalAmount"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    required
+                >
 
             </div>
 
@@ -1474,108 +1928,6 @@
                     Отмена
                 </button>
 
-                <button
-                    type="submit"
-                    class="btn btn-primary"
-                >
-                    Сохранить вывод
-                </button>
-
-            </div>
-
-        </form>
-
-    </div>
-
-</div>
-
-
-<!-- =========================================================
-     SETTINGS MODAL
-     ========================================================= -->
-
-<div
-    id="settingsModal"
-    class="modal-backdrop hidden"
->
-
-    <div class="modal">
-
-        <div class="modal-header">
-
-            <h2>
-                Настройки подключения
-            </h2>
-
-            <button
-                class="modal-close"
-                data-close="settingsModal"
-            >
-                ×
-            </button>
-
-        </div>
-
-
-        <form id="settingsForm">
-
-            <div class="modal-body">
-
-                <div class="field">
-                    <label for="settingsUrl">
-                        Supabase URL
-                    </label>
-
-                    <input
-                        id="settingsUrl"
-                        type="url"
-                        required
-                    >
-                </div>
-
-                <br>
-
-                <div class="field">
-                    <label for="settingsKey">
-                        Supabase anon / publishable key
-                    </label>
-
-                    <textarea
-                        id="settingsKey"
-                        rows="5"
-                        required
-                    ></textarea>
-                </div>
-
-                <p style="
-                    color:var(--muted);
-                    font-size:13px;
-                    line-height:1.5;
-                ">
-                    Значения хранятся только в localStorage текущего
-                    браузера. Service role key использовать нельзя.
-                </p>
-
-            </div>
-
-
-            <div class="modal-footer">
-
-                <button
-                    type="button"
-                    class="btn btn-danger"
-                    id="clearCredentialsButton"
-                >
-                    Очистить ключи
-                </button>
-
-                <button
-                    type="button"
-                    class="btn btn-secondary"
-                    data-close="settingsModal"
-                >
-                    Отмена
-                </button>
 
                 <button
                     type="submit"
@@ -1593,29 +1945,131 @@
 </div>
 
 
-<!-- TOASTS -->
+<!-- =========================================================
+     SETTINGS MODAL
+     ========================================================= -->
 
 <div
-    id="toastContainer"
-    class="toast-container"
-></div>
+    id="settingsModal"
+    class="modal hidden"
+>
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h2>
+                Настройки Supabase
+            </h2>
+
+            <button
+                class="modal-close"
+                data-close="settingsModal"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="settingsForm">
+
+            <div class="form-group">
+
+                <label>
+                    Supabase URL
+                </label>
+
+                <input
+                    id="settingsUrl"
+                    type="url"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    anon / publishable key
+                </label>
+
+                <input
+                    id="settingsKey"
+                    type="password"
+                    required
+                >
+
+            </div>
+
+
+            <p
+                style="
+                    color:#94a3b8;
+                    font-size:13px;
+                    line-height:1.5;
+                "
+            >
+                Изменение подключения потребует повторной
+                авторизации.
+            </p>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-close="settingsModal"
+                >
+                    Отмена
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Сохранить
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     TOAST
+     ========================================================= -->
+
+<div id="toastContainer"></div>
 
 
 <script>
+
+"use strict";
+
+
 /* ============================================================
-   CONFIGURATION
+   GLOBAL STATE
    ============================================================ */
 
-const STORAGE_URL = "freelance_supabase_url";
-const STORAGE_KEY = "freelance_supabase_key";
-
 let supabaseClient = null;
+
 let currentUser = null;
 
 let orders = [];
+
 let withdrawals = [];
 
 let currentChart = null;
+
+let currentChartType = "years";
 
 
 /* ============================================================
@@ -1637,7 +2091,8 @@ const MONTH_NAMES = [
     "Декабрь"
 ];
 
-const WORK_TYPES = [
+
+const TYPE_NAMES = [
     "Диплом",
     "Курсовая",
     "Реферат",
@@ -1646,7 +2101,8 @@ const WORK_TYPES = [
     "Другое"
 ];
 
-const STATUSES = [
+
+const STATUS_NAMES = [
     "В работе",
     "На проверке",
     "На доработке",
@@ -1656,31 +2112,51 @@ const STATUSES = [
 
 
 /* ============================================================
-   DOM HELPERS
+   SHORTCUT
    ============================================================ */
 
-const $ = selector => document.querySelector(selector);
+function $(selector) {
 
-const $$ = selector =>
-    Array.from(document.querySelectorAll(selector));
+    return document.querySelector(selector);
+
+}
 
 
 /* ============================================================
-   TOAST
+   LOCAL STORAGE
    ============================================================ */
 
-function showToast(message, type = "success") {
-    const container = $("#toastContainer");
+function getCredentials() {
 
-    const toast = document.createElement("div");
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
+    return {
 
-    container.appendChild(toast);
+        url:
+            localStorage.getItem(
+                "freelance_supabase_url"
+            ) || "",
 
-    setTimeout(() => {
-        toast.remove();
-    }, 3500);
+        key:
+            localStorage.getItem(
+                "freelance_supabase_key"
+            ) || ""
+
+    };
+
+}
+
+
+function saveCredentials(url, key) {
+
+    localStorage.setItem(
+        "freelance_supabase_url",
+        url
+    );
+
+    localStorage.setItem(
+        "freelance_supabase_key",
+        key
+    );
+
 }
 
 
@@ -1688,355 +2164,116 @@ function showToast(message, type = "success") {
    SUPABASE INITIALIZATION
    ============================================================ */
 
-function getSavedCredentials() {
-    return {
-        url: localStorage.getItem(STORAGE_URL),
-        key: localStorage.getItem(STORAGE_KEY)
-    };
-}
-
-
 function initializeSupabase(url, key) {
+
     try {
-        if (!url || !key) {
-            return false;
+
+        if (!window.supabase) {
+
+            throw new Error(
+                "Библиотека Supabase не загрузилась."
+            );
+
         }
 
+
         supabaseClient =
-            window.supabase.createClient(url, key);
+            window.supabase.createClient(
+                url,
+                key
+            );
+
 
         return true;
 
     } catch (error) {
+
         console.error(error);
 
         showToast(
-            "Не удалось создать подключение Supabase",
+            "Ошибка подключения Supabase: " +
+            error.message,
             "error"
         );
 
         return false;
+
     }
+
 }
 
 
 /* ============================================================
-   APPLICATION START
+   TOAST
    ============================================================ */
 
-async function startApplication() {
+function showToast(message, type = "success") {
 
-    const credentials = getSavedCredentials();
+    const toast =
+        document.createElement("div");
 
+    toast.className =
+        "toast " + type;
 
-    /*
-        Если Supabase URL/key еще не сохранены,
-        сначала показываем экран настройки подключения.
-    */
-
-    if (!credentials.url || !credentials.key) {
-
-        $("#setupScreen").classList.remove("hidden");
-        $("#authScreen").classList.add("hidden");
-        $("#app").classList.add("hidden");
-
-        return;
-    }
+    toast.textContent =
+        message;
 
 
-    if (!initializeSupabase(
-        credentials.url,
-        credentials.key
-    )) {
-        return;
-    }
+    $("#toastContainer")
+        .appendChild(toast);
 
 
-    /*
-        Проверяем, есть ли сохраненная Supabase Auth-сессия.
-    */
+    setTimeout(() => {
 
-    const {
-        data: { session },
-        error
-    } = await supabaseClient.auth.getSession();
+        toast.remove();
 
+    }, 4000);
 
-    if (error) {
-
-        console.error(error);
-
-        showToast(
-            "Ошибка проверки авторизации",
-            "error"
-        );
-
-        return;
-    }
-
-
-    /*
-        Пользователь еще не вошел.
-    */
-
-    if (!session) {
-
-        currentUser = null;
-
-        $("#setupScreen").classList.add("hidden");
-        $("#app").classList.add("hidden");
-        $("#authScreen").classList.remove("hidden");
-
-        return;
-    }
-
-
-    /*
-        Пользователь авторизован.
-    */
-
-    currentUser = session.user;
-
-
-    $("#setupScreen").classList.add("hidden");
-    $("#authScreen").classList.add("hidden");
-    $("#app").classList.remove("hidden");
-
-
-    await loadAllData();
 }
 
 
 /* ============================================================
-   LOAD DATA
-   ============================================================ */
-
-async function loadAllData() {
-
-    try {
-
-        const [
-            ordersResponse,
-            withdrawalsResponse
-        ] = await Promise.all([
-
-            supabaseClient
-                .from("orders")
-                .select("*")
-                .order("date_accepted", {
-                    ascending: false
-                }),
-
-            supabaseClient
-                .from("withdrawals")
-                .select("*")
-                .order("date_withdrawal", {
-                    ascending: false
-                })
-
-        ]);
-
-
-        if (ordersResponse.error) {
-            throw ordersResponse.error;
-        }
-
-        if (withdrawalsResponse.error) {
-            throw withdrawalsResponse.error;
-        }
-
-
-        orders = ordersResponse.data || [];
-        withdrawals = withdrawalsResponse.data || [];
-
-
-        renderEverything();
-
-    } catch (error) {
-
-        console.error(error);
-
-        showToast(
-            "Ошибка загрузки данных: " +
-            (error.message || "неизвестная ошибка"),
-            "error"
-        );
-    }
-}
-
-
-/* ============================================================
-   MONEY
+   FORMAT MONEY
    ============================================================ */
 
 function money(value) {
 
-    return new Intl.NumberFormat(
+    const number =
+        Number(value) || 0;
+
+
+    return number.toLocaleString(
         "ru-RU",
         {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }
-    ).format(Number(value) || 0) + " ₽";
+    ) + " ₽";
+
 }
 
 
 /* ============================================================
-   DATE HELPERS
+   ESCAPE HTML
    ============================================================ */
 
-function localDateString(date = new Date()) {
+function escapeHtml(value) {
 
-    const year = date.getFullYear();
-    const month =
-        String(date.getMonth() + 1).padStart(2, "0");
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 
-    const day =
-        String(date.getDate()).padStart(2, "0");
-
-    return `${year}-${month}-${day}`;
-}
-
-
-function formatDate(dateString) {
-
-    if (!dateString) {
-        return "—";
-    }
-
-    const [year, month, day] =
-        dateString.split("-");
-
-    return `${day}.${month}.${year}`;
 }
 
 
 /* ============================================================
-   PAID ORDER LOGIC
+   STATUS CSS
    ============================================================ */
 
-/*
-    В соответствии с условием задачи заказ считается
-    финансово оплаченным в двух случаях:
-
-    1. status === "Оплачен"
-    ИЛИ
-    2. date_paid заполнена.
-
-    Это позволяет не потерять доход, если дата оплаты уже
-    занесена, но статус забыли поменять вручную.
-*/
-
-function isPaid(order) {
-
-    return (
-        order.status === "Оплачен" ||
-        Boolean(order.date_paid)
-    );
-}
-
-
-function orderIncome(order) {
-
-    return (
-        Number(order.price || 0) +
-        Number(order.tips || 0)
-    );
-}
-
-
-/* ============================================================
-   BALANCE
-   ============================================================ */
-
-function calculateBalance() {
-
-    /*
-        Текущий баланс:
-
-        сумма(price + tips) всех оплаченных заказов
-        -
-        сумма всех withdrawals.
-
-        Мы специально НЕ вычитаем комиссию здесь,
-        потому что комиссия применяется только во второй
-        карточке "Баланс к получению".
-    */
-
-    const paidIncome = orders
-        .filter(isPaid)
-        .reduce(
-            (sum, order) =>
-                sum + orderIncome(order),
-            0
-        );
-
-
-    const withdrawn = withdrawals
-        .reduce(
-            (sum, withdrawal) =>
-                sum + Number(withdrawal.amount || 0),
-            0
-        );
-
-
-    return paidIncome - withdrawn;
-}
-
-
-function calculatePendingBalance() {
-
-    /*
-        Потенциальный доход по незавершенным заказам.
-
-        Исключаем:
-        - Оплачен
-        - Отменен
-
-        Остальные статусы считаются будущим доходом.
-    */
-
-    return orders
-        .filter(order =>
-            order.status !== "Оплачен" &&
-            order.status !== "Отменен"
-        )
-        .reduce(
-            (sum, order) =>
-                sum + orderIncome(order),
-            0
-        );
-}
-
-
-function renderBalances() {
-
-    const currentBalance =
-        calculateBalance();
-
-    const balanceAfterFee =
-        currentBalance * 0.975;
-
-    const pendingBalance =
-        calculatePendingBalance();
-
-
-    $("#currentBalance").textContent =
-        money(currentBalance);
-
-    $("#balanceAfterFee").textContent =
-        money(balanceAfterFee);
-
-    $("#pendingBalance").textContent =
-        money(pendingBalance);
-}
-
-
-/* ============================================================
-   ORDERS TABLE
-   ============================================================ */
-
-function getStatusClass(status) {
+function statusClass(status) {
 
     switch (status) {
 
@@ -2057,11 +2294,13 @@ function getStatusClass(status) {
 
         default:
             return "";
+
     }
+
 }
 
 
-function getRowClass(status) {
+function rowClass(status) {
 
     switch (status) {
 
@@ -2071,306 +2310,738 @@ function getRowClass(status) {
         case "Оплачен":
             return "row-paid";
 
-        case "На проверке":
-            return "row-check";
-
         case "Отменен":
             return "row-cancelled";
 
         default:
             return "";
+
     }
+
 }
 
 
+/* ============================================================
+   DATE HELPERS
+   ============================================================ */
+
+function todayString() {
+
+    const date =
+        new Date();
+
+    const year =
+        date.getFullYear();
+
+    const month =
+        String(
+            date.getMonth() + 1
+        ).padStart(2, "0");
+
+    const day =
+        String(
+            date.getDate()
+        ).padStart(2, "0");
+
+
+    return `${year}-${month}-${day}`;
+
+}
+
+
+/*
+    ВАЖНО:
+
+    Не используем new Date("YYYY-MM-DD") для
+    аналитики, чтобы избежать проблем с часовыми поясами.
+
+    Здесь дата разбирается вручную.
+*/
+
+function dateParts(dateString) {
+
+    if (!dateString) {
+        return null;
+    }
+
+
+    const parts =
+        dateString
+            .slice(0, 10)
+            .split("-")
+            .map(Number);
+
+
+    if (parts.length !== 3) {
+        return null;
+    }
+
+
+    return {
+
+        year: parts[0],
+
+        month: parts[1],
+
+        day: parts[2]
+
+    };
+
+}
+
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+
+async function checkSession() {
+
+    if (!supabaseClient) {
+        return false;
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .auth
+            .getSession();
+
+
+    if (error) {
+
+        console.error(error);
+
+        showToast(
+            "Ошибка проверки авторизации: " +
+            error.message,
+            "error"
+        );
+
+        return false;
+    }
+
+
+    if (!data.session) {
+
+        currentUser = null;
+
+        showAuthScreen();
+
+        return false;
+    }
+
+
+    currentUser =
+        data.session.user;
+
+
+    return true;
+
+}
+
+
+function showSetupScreen() {
+
+    $("#setupScreen")
+        .classList
+        .remove("hidden");
+
+    $("#authScreen")
+        .classList
+        .add("hidden");
+
+    $("#app")
+        .classList
+        .add("hidden");
+
+}
+
+
+function showAuthScreen() {
+
+    $("#setupScreen")
+        .classList
+        .add("hidden");
+
+    $("#authScreen")
+        .classList
+        .remove("hidden");
+
+    $("#app")
+        .classList
+        .add("hidden");
+
+}
+
+
+function showApp() {
+
+    $("#setupScreen")
+        .classList
+        .add("hidden");
+
+    $("#authScreen")
+        .classList
+        .add("hidden");
+
+    $("#app")
+        .classList
+        .remove("hidden");
+
+
+    $("#currentUserEmail")
+        .textContent =
+        currentUser?.email || "";
+
+}
+
+
+/* ============================================================
+   LOAD ALL DATA
+   ============================================================ */
+
+async function loadAllData() {
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    await loadOrders();
+
+    await loadWithdrawals();
+
+    renderOrders();
+
+    renderWithdrawals();
+
+    updateBalance();
+
+    updateAnalytics();
+
+    updateYearSelectors();
+
+    renderChart();
+
+}
+
+
+/* ============================================================
+   LOAD ORDERS
+   ============================================================ */
+
+async function loadOrders() {
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("orders")
+            .select("*")
+            .order(
+                "date_accepted",
+                {
+                    ascending: false
+                }
+            );
+
+
+    if (error) {
+
+        console.error(error);
+
+        showToast(
+            "Ошибка загрузки заказов: " +
+            error.message,
+            "error"
+        );
+
+        return;
+    }
+
+
+    orders =
+        data || [];
+
+}
+
+
+/* ============================================================
+   LOAD WITHDRAWALS
+   ============================================================ */
+
+async function loadWithdrawals() {
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("withdrawals")
+            .select("*")
+            .order(
+                "date_withdrawal",
+                {
+                    ascending: false
+                }
+            );
+
+
+    if (error) {
+
+        console.error(error);
+
+        showToast(
+            "Ошибка загрузки выводов: " +
+            error.message,
+            "error"
+        );
+
+        return;
+    }
+
+
+    withdrawals =
+        data || [];
+
+}
+
+
+/* ============================================================
+   PAID ORDER
+   ============================================================ */
+
+/*
+    Заказ считается финансово оплаченным, если:
+
+    1. status === "Оплачен"
+
+    ИЛИ
+
+    2. заполнено date_paid.
+
+    Это соответствует условию приложения.
+*/
+
+function isPaid(order) {
+
+    return (
+        order.status === "Оплачен" ||
+        Boolean(order.date_paid)
+    );
+
+}
+
+
+/* ============================================================
+   ORDER TOTAL
+   ============================================================ */
+
+function orderTotal(order) {
+
+    return (
+        Number(order.price) || 0
+    ) +
+    (
+        Number(order.tips) || 0
+    );
+
+}
+
+
+/* ============================================================
+   CURRENT BALANCE
+   ============================================================ */
+
+function updateBalance() {
+
+    /*
+        Текущий баланс:
+
+        сумма (price + tips) всех оплаченных заказов
+        минус все зарегистрированные выводы.
+
+        Важно:
+
+        мы НЕ учитываем просто все заказы,
+        а только оплаченные.
+    */
+
+    const paidIncome =
+        orders
+            .filter(isPaid)
+            .reduce(
+                (
+                    sum,
+                    order
+                ) =>
+                    sum +
+                    orderTotal(order),
+                0
+            );
+
+
+    const totalWithdrawals =
+        withdrawals
+            .reduce(
+                (
+                    sum,
+                    withdrawal
+                ) =>
+                    sum +
+                    (
+                        Number(
+                            withdrawal.amount
+                        ) || 0
+                    ),
+                0
+            );
+
+
+    const currentBalance =
+        paidIncome -
+        totalWithdrawals;
+
+
+    /*
+        Комиссия 2.5%.
+
+        Поэтому к получению:
+
+            текущий баланс × 0.975
+    */
+
+    const withdrawable =
+        currentBalance * 0.975;
+
+
+    /*
+        Потенциальный доход:
+
+        все заказы, которые еще не оплачены
+        и не отменены.
+    */
+
+    const pending =
+        orders
+            .filter(order =>
+                order.status !== "Оплачен" &&
+                !order.date_paid &&
+                order.status !== "Отменен"
+            )
+            .reduce(
+                (
+                    sum,
+                    order
+                ) =>
+                    sum +
+                    orderTotal(order),
+                0
+            );
+
+
+    $("#currentBalance")
+        .textContent =
+        money(currentBalance);
+
+
+    $("#withdrawableBalance")
+        .textContent =
+        money(withdrawable);
+
+
+    $("#pendingBalance")
+        .textContent =
+        money(pending);
+
+}
+
+
+/* ============================================================
+   RENDER ORDERS
+   ============================================================ */
+
 function renderOrders() {
 
-    const tbody = $("#ordersTableBody");
+    const tbody =
+        $("#ordersTableBody");
+
 
     const statusFilter =
         $("#statusFilter").value;
+
 
     const typeFilter =
         $("#typeFilter").value;
 
 
-    const filteredOrders =
+    const filtered =
         orders.filter(order => {
 
             const statusMatches =
                 !statusFilter ||
                 order.status === statusFilter;
 
+
             const typeMatches =
                 !typeFilter ||
                 order.type_work === typeFilter;
 
-            return statusMatches && typeMatches;
+
+            return (
+                statusMatches &&
+                typeMatches
+            );
+
         });
 
 
-    tbody.innerHTML = "";
-
-
-    if (!filteredOrders.length) {
+    if (!filtered.length) {
 
         tbody.innerHTML = `
             <tr>
-                <td colspan="11" class="empty">
-                    Заказов не найдено
+                <td colspan="11">
+                    <div class="empty">
+                        Заказов не найдено
+                    </div>
                 </td>
             </tr>
         `;
 
         return;
+
     }
 
 
-    filteredOrders.forEach(order => {
+    tbody.innerHTML =
+        filtered
+            .map(order => {
 
-        const price =
-            Number(order.price || 0);
-
-        const tips =
-            Number(order.tips || 0);
-
-        const hours =
-            Number(order.hours_spent || 0);
+                const total =
+                    orderTotal(order);
 
 
-        /*
-            Р/час:
-
-                (Цена + Чаевые) / Количество часов
-
-            Если часы равны 0, деление невозможно,
-            поэтому отображаем "—".
-        */
-
-        const hourlyRate =
-            hours > 0
-                ? (price + tips) / hours
-                : null;
+                const hours =
+                    Number(
+                        order.hours_spent
+                    ) || 0;
 
 
-        const tr =
-            document.createElement("tr");
+                /*
+                    Р/час:
 
-        tr.className =
-            getRowClass(order.status);
+                    (Цена + Чаевые) / Количество часов
 
+                    Если часов 0, деление невозможно,
+                    поэтому показываем "—".
+                */
 
-        tr.innerHTML = `
-
-            <td>
-                ${formatDate(order.date_accepted)}
-            </td>
-
-            <td>
-                ${formatDate(order.date_submitted)}
-            </td>
-
-            <td>
-                ${escapeHtml(order.type_work)}
-            </td>
-
-            <td>
-                ${escapeHtml(order.description)}
-            </td>
-
-            <td>
-                ${money(price)}
-            </td>
-
-            <td>
-                ${money(tips)}
-            </td>
-
-            <td>
-                ${hours.toLocaleString("ru-RU")}
-            </td>
-
-            <td>
-                ${
-                    hourlyRate === null
-                        ? "—"
-                        : money(hourlyRate) + "/ч"
-                }
-            </td>
-
-            <td>
-                ${formatDate(order.date_paid)}
-            </td>
-
-            <td>
-                <span
-                    class="status-badge ${getStatusClass(order.status)}"
-                >
-                    ${escapeHtml(order.status)}
-                </span>
-            </td>
-
-            <td>
-
-                <div class="actions">
-
-                    <button
-                        class="btn btn-secondary btn-small"
-                        data-edit-order="${order.id}"
-                    >
-                        Ред.
-                    </button>
-
-                    <button
-                        class="btn btn-danger btn-small"
-                        data-delete-order="${order.id}"
-                    >
-                        Удалить
-                    </button>
-
-                </div>
-
-            </td>
-        `;
+                const hourly =
+                    hours > 0
+                        ? total / hours
+                        : null;
 
 
-        tbody.appendChild(tr);
-    });
+                return `
+                    <tr class="${rowClass(order.status)}">
 
+                        <td>
+                            ${escapeHtml(
+                                order.date_accepted || "—"
+                            )}
+                        </td>
 
-    $$("[data-edit-order]")
-        .forEach(button => {
+                        <td>
+                            ${escapeHtml(
+                                order.date_submitted || "—"
+                            )}
+                        </td>
 
-            button.addEventListener(
-                "click",
-                () => {
-                    const id =
-                        button.dataset.editOrder;
+                        <td>
+                            ${escapeHtml(
+                                order.type_work || "—"
+                            )}
+                        </td>
 
-                    openEditOrder(id);
-                }
-            );
-        });
+                        <td>
+                            ${escapeHtml(
+                                order.description || "—"
+                            )}
+                        </td>
 
+                        <td>
+                            ${money(order.price)}
+                        </td>
 
-    $$("[data-delete-order]")
-        .forEach(button => {
+                        <td>
+                            ${money(order.tips)}
+                        </td>
 
-            button.addEventListener(
-                "click",
-                () => {
+                        <td>
+                            ${hours}
+                        </td>
 
-                    const id =
-                        button.dataset.deleteOrder;
+                        <td>
+                            ${
+                                hourly === null
+                                    ? "—"
+                                    : money(hourly)
+                            }
+                        </td>
 
-                    deleteOrder(id);
-                }
-            );
-        });
+                        <td>
+                            ${escapeHtml(
+                                order.date_paid || "—"
+                            )}
+                        </td>
+
+                        <td>
+                            <span
+                                class="status ${statusClass(
+                                    order.status
+                                )}"
+                            >
+                                ${escapeHtml(
+                                    order.status
+                                )}
+                            </span>
+                        </td>
+
+                        <td>
+
+                            <div class="actions">
+
+                                <button
+                                    class="btn btn-small btn-secondary"
+                                    data-edit-order="${order.id}"
+                                >
+                                    ✏
+                                </button>
+
+                                <button
+                                    class="btn btn-small btn-danger"
+                                    data-delete-order="${order.id}"
+                                >
+                                    🗑
+                                </button>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+                `;
+
+            })
+            .join("");
+
 }
 
 
 /* ============================================================
-   HTML ESCAPE
+   OPEN ORDER MODAL
    ============================================================ */
 
-function escapeHtml(value) {
-
-    return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
-
-/* ============================================================
-   ORDER MODAL
-   ============================================================ */
-
-function resetOrderForm() {
+function openOrderModal(order = null) {
 
     $("#orderForm").reset();
 
-    $("#orderId").value = "";
-
-    $("#tips").value = "0";
-
-    $("#orderModalTitle").textContent =
-        "Добавить заказ";
-
-    $("#dateAccepted").value =
-        localDateString();
-
-    $("#orderStatus").value =
-        "В работе";
-}
-
-
-function openAddOrder() {
-
-    resetOrderForm();
-
-    $("#orderModal")
-        .classList
-        .remove("hidden");
-}
-
-
-function openEditOrder(id) {
-
-    const order =
-        orders.find(
-            item => String(item.id) === String(id)
-        );
 
     if (!order) {
-        return;
+
+        $("#orderModalTitle")
+            .textContent =
+            "Добавить заказ";
+
+
+        $("#orderId")
+            .value = "";
+
+
+        $("#dateAccepted")
+            .value =
+            todayString();
+
+
+        $("#tips")
+            .value = "0";
+
+
+        $("#status")
+            .value = "В работе";
+
+    } else {
+
+        $("#orderModalTitle")
+            .textContent =
+            "Редактировать заказ";
+
+
+        $("#orderId")
+            .value =
+            order.id;
+
+
+        $("#dateAccepted")
+            .value =
+            order.date_accepted || "";
+
+
+        $("#dateSubmitted")
+            .value =
+            order.date_submitted || "";
+
+
+        $("#typeWork")
+            .value =
+            order.type_work || "";
+
+
+        $("#description")
+            .value =
+            order.description || "";
+
+
+        $("#price")
+            .value =
+            order.price ?? "";
+
+
+        $("#tips")
+            .value =
+            order.tips ?? 0;
+
+
+        $("#hoursSpent")
+            .value =
+            order.hours_spent ?? "";
+
+
+        $("#datePaid")
+            .value =
+            order.date_paid || "";
+
+
+        $("#status")
+            .value =
+            order.status || "В работе";
+
     }
 
 
-    $("#orderId").value = order.id;
-
-    $("#dateAccepted").value =
-        order.date_accepted || "";
-
-    $("#dateSubmitted").value =
-        order.date_submitted || "";
-
-    $("#typeWork").value =
-        order.type_work || "";
-
-    $("#description").value =
-        order.description || "";
-
-    $("#price").value =
-        order.price ?? "";
-
-    $("#tips").value =
-        order.tips ?? 0;
-
-    $("#hoursSpent").value =
-        order.hours_spent ?? "";
-
-    $("#datePaid").value =
-        order.date_paid || "";
-
-    $("#orderStatus").value =
-        order.status || "В работе";
-
-
-    $("#orderModalTitle").textContent =
-        "Редактировать заказ";
-
     $("#orderModal")
         .classList
         .remove("hidden");
+
 }
 
 
 /* ============================================================
-   CREATE / UPDATE ORDER
+   SAVE ORDER
    ============================================================ */
 
 async function saveOrder(event) {
@@ -2378,195 +3049,238 @@ async function saveOrder(event) {
     event.preventDefault();
 
 
+    if (!currentUser) {
+
+        showToast(
+            "Необходимо войти в аккаунт",
+            "error"
+        );
+
+        return;
+    }
+
+
     const id =
-        $("#orderId").value.trim();
+        $("#orderId").value;
 
 
     const dateAccepted =
         $("#dateAccepted").value;
 
+
     const dateSubmitted =
-        $("#dateSubmitted").value || null;
+        $("#dateSubmitted").value ||
+        null;
+
 
     const typeWork =
         $("#typeWork").value;
 
+
     const description =
-        $("#description").value.trim();
+        $("#description")
+            .value
+            .trim();
+
 
     const price =
-        Number($("#price").value);
+        Number(
+            $("#price").value
+        );
+
 
     const tips =
-        Number($("#tips").value || 0);
+        Number(
+            $("#tips").value
+        ) || 0;
+
 
     const hoursSpent =
-        Number($("#hoursSpent").value);
+        Number(
+            $("#hoursSpent").value
+        );
 
-    let datePaid =
-        $("#datePaid").value || null;
+
+    const datePaid =
+        $("#datePaid").value ||
+        null;
+
 
     const status =
-        $("#orderStatus").value;
+        $("#status").value;
 
 
-    /* ---------------------------
+    /* --------------------------------------------------------
        VALIDATION
-       --------------------------- */
+       -------------------------------------------------------- */
 
     if (!dateAccepted) {
+
         showToast(
-            "Укажите дату принятия заказа",
+            "Укажите дату принятия",
             "error"
         );
+
         return;
     }
 
 
-    if (!WORK_TYPES.includes(typeWork)) {
+    if (!typeWork) {
+
         showToast(
-            "Выберите корректный тип работы",
+            "Выберите тип работы",
             "error"
         );
+
         return;
     }
 
 
     if (!description) {
+
         showToast(
-            "Введите описание заказа",
+            "Введите описание",
             "error"
         );
+
         return;
     }
 
 
     if (!Number.isFinite(price) || price < 0) {
+
         showToast(
-            "Цена должна быть неотрицательным числом",
+            "Некорректная цена",
             "error"
         );
+
         return;
     }
 
 
-    if (!Number.isFinite(tips) || tips < 0) {
+    if (
+        !Number.isFinite(hoursSpent) ||
+        hoursSpent < 0
+    ) {
+
         showToast(
-            "Чаевые должны быть неотрицательным числом",
+            "Некорректное количество часов",
             "error"
         );
-        return;
-    }
 
-
-    if (!Number.isFinite(hoursSpent) || hoursSpent < 0) {
-        showToast(
-            "Количество часов должно быть неотрицательным числом",
-            "error"
-        );
-        return;
-    }
-
-
-    if (!STATUSES.includes(status)) {
-        showToast(
-            "Выберите корректный статус",
-            "error"
-        );
         return;
     }
 
 
     /*
-        Если статус "Оплачен", но дата оплаты не заполнена,
-        автоматически ставим сегодняшнюю дату.
+        При создании новой записи обязательно указываем
+        ID текущего пользователя.
 
-        Это удобно, потому что по условию аналитика должна
-        учитывать оплаченный заказ.
-    */
-
-    if (status === "Оплачен" && !datePaid) {
-        datePaid = localDateString();
-    }
-
-
-    const payload = {
-
-    /*
-        user_id связывает заказ с конкретным аккаунтом
-        Supabase Auth.
-
-        RLS затем проверяет:
+        RLS проверит:
 
             user_id = auth.uid()
 
-        Поэтому другой авторизованный пользователь
-        не сможет увидеть или изменить этот заказ.
+        и разрешит INSERT только для владельца.
     */
 
-    user_id: currentUser.id,
+    const insertPayload = {
 
-    date_accepted: dateAccepted,
+        user_id:
+            currentUser.id,
 
-    date_submitted: dateSubmitted,
+        date_accepted:
+            dateAccepted,
 
-    type_work: typeWork,
+        date_submitted:
+            dateSubmitted,
 
-    description: description,
+        type_work:
+            typeWork,
 
-    price: price,
+        description:
+            description,
 
-    tips: tips,
+        price:
+            price,
 
-    hours_spent: hoursSpent,
+        tips:
+            tips,
 
-    date_paid: datePaid,
+        hours_spent:
+            hoursSpent,
 
-    status: status
-};
+        date_paid:
+            datePaid,
+
+        status:
+            status
+
+    };
+
+
+    let response;
 
 
     try {
 
-        let response;
-
-
         if (id) {
 
-    /*
-        При редактировании НЕ передаем user_id
-        из формы.
+            /*
+                При UPDATE user_id специально НЕ меняем.
 
-        RLS проверит существующий user_id строки
-        через auth.uid().
-    */
+                RLS сначала проверит существующую строку
+                через USING (user_id = auth.uid()).
+            */
 
-    const updatePayload = {
-        date_accepted: dateAccepted,
-        date_submitted: dateSubmitted,
-        type_work: typeWork,
-        description: description,
-        price: price,
-        tips: tips,
-        hours_spent: hoursSpent,
-        date_paid: datePaid,
-        status: status
-    };
+            const updatePayload = {
+
+                date_accepted:
+                    dateAccepted,
+
+                date_submitted:
+                    dateSubmitted,
+
+                type_work:
+                    typeWork,
+
+                description:
+                    description,
+
+                price:
+                    price,
+
+                tips:
+                    tips,
+
+                hours_spent:
+                    hoursSpent,
+
+                date_paid:
+                    datePaid,
+
+                status:
+                    status
+
+            };
 
 
-    response =
-        await supabaseClient
-            .from("orders")
-            .update(updatePayload)
-            .eq("id", id);
+            response =
+                await supabaseClient
+                    .from("orders")
+                    .update(updatePayload)
+                    .eq("id", id);
 
-} else {
 
-    response =
-        await supabaseClient
-            .from("orders")
-            .insert(payload);
-}
+        } else {
+
+            response =
+                await supabaseClient
+                    .from("orders")
+                    .insert(
+                        insertPayload
+                    );
+
+        }
 
 
         if (response.error) {
@@ -2575,6 +3289,7 @@ async function saveOrder(event) {
 
 
         closeModal("orderModal");
+
 
         showToast(
             id
@@ -2592,10 +3307,12 @@ async function saveOrder(event) {
 
         showToast(
             "Ошибка сохранения: " +
-            (error.message || "неизвестная ошибка"),
+            error.message,
             "error"
         );
+
     }
+
 }
 
 
@@ -2605,20 +3322,9 @@ async function saveOrder(event) {
 
 async function deleteOrder(id) {
 
-    const order =
-        orders.find(
-            item => String(item.id) === String(id)
-        );
-
-
-    if (!order) {
-        return;
-    }
-
-
     const confirmed =
         confirm(
-            `Удалить заказ "${order.description}"?`
+            "Удалить этот заказ?"
         );
 
 
@@ -2629,19 +3335,24 @@ async function deleteOrder(id) {
 
     try {
 
-        const response =
+        const {
+            error
+        } =
             await supabaseClient
                 .from("orders")
                 .delete()
                 .eq("id", id);
 
 
-        if (response.error) {
-            throw response.error;
+        if (error) {
+            throw error;
         }
 
 
-        showToast("Заказ удален");
+        showToast(
+            "Заказ удален"
+        );
+
 
         await loadAllData();
 
@@ -2652,80 +3363,170 @@ async function deleteOrder(id) {
 
         showToast(
             "Ошибка удаления: " +
-            (error.message || "неизвестная ошибка"),
+            error.message,
             "error"
         );
+
     }
+
 }
 
 
 /* ============================================================
-   WITHDRAWALS
+   RENDER WITHDRAWALS
    ============================================================ */
 
-function openWithdrawal() {
+function renderWithdrawals() {
 
-    $("#withdrawalForm").reset();
+    const tbody =
+        $("#withdrawalsTableBody");
 
-    $("#withdrawalDate").value =
-        localDateString();
 
-    $("#withdrawalModal")
-        .classList
-        .remove("hidden");
+    if (!withdrawals.length) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3">
+                    <div class="empty">
+                        Выводов пока нет
+                    </div>
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+
+    tbody.innerHTML =
+        withdrawals
+            .map(withdrawal => {
+
+                return `
+                    <tr>
+
+                        <td>
+                            ${escapeHtml(
+                                withdrawal.date_withdrawal
+                            )}
+                        </td>
+
+                        <td>
+                            ${money(
+                                withdrawal.amount
+                            )}
+                        </td>
+
+                        <td>
+
+                            <button
+                                class="btn btn-small btn-danger"
+                                data-delete-withdrawal="${withdrawal.id}"
+                            >
+                                Удалить
+                            </button>
+
+                        </td>
+
+                    </tr>
+                `;
+
+            })
+            .join("");
+
 }
 
+
+/* ============================================================
+   SAVE WITHDRAWAL
+   ============================================================ */
 
 async function saveWithdrawal(event) {
 
     event.preventDefault();
 
 
-    const date =
-        $("#withdrawalDate").value;
+    if (!currentUser) {
 
-    const amount =
-        Number($("#withdrawalAmount").value);
-
-
-    if (!date) {
         showToast(
-            "Укажите дату вывода",
+            "Необходимо войти",
             "error"
         );
+
         return;
     }
 
 
-    if (!Number.isFinite(amount) || amount <= 0) {
+    const date =
+        $("#withdrawalDate").value;
+
+
+    const amount =
+        Number(
+            $("#withdrawalAmount").value
+        );
+
+
+    if (!date) {
+
         showToast(
-            "Сумма вывода должна быть больше 0",
+            "Укажите дату",
             "error"
         );
+
+        return;
+    }
+
+
+    if (
+        !Number.isFinite(amount) ||
+        amount <= 0
+    ) {
+
+        showToast(
+            "Введите корректную сумму",
+            "error"
+        );
+
         return;
     }
 
 
     try {
 
-        const response =
-    await supabaseClient
-        .from("withdrawals")
-        .insert({
-            user_id: currentUser.id,
-            date_withdrawal: date,
-            amount: amount
-        });
+        const {
+            error
+        } =
+            await supabaseClient
+                .from("withdrawals")
+                .insert({
+
+                    user_id:
+                        currentUser.id,
+
+                    date_withdrawal:
+                        date,
+
+                    amount:
+                        amount
+
+                });
 
 
-        if (response.error) {
-            throw response.error;
+        if (error) {
+            throw error;
         }
 
 
-        closeModal("withdrawalModal");
+        closeModal(
+            "withdrawalModal"
+        );
 
-        showToast("Вывод средств сохранен");
+
+        showToast(
+            "Вывод зафиксирован"
+        );
+
 
         await loadAllData();
 
@@ -2735,11 +3536,67 @@ async function saveWithdrawal(event) {
         console.error(error);
 
         showToast(
-            "Ошибка сохранения вывода: " +
-            (error.message || "неизвестная ошибка"),
+            "Ошибка сохранения: " +
+            error.message,
             "error"
         );
+
     }
+
+}
+
+
+/* ============================================================
+   DELETE WITHDRAWAL
+   ============================================================ */
+
+async function deleteWithdrawal(id) {
+
+    if (
+        !confirm(
+            "Удалить этот вывод?"
+        )
+    ) {
+        return;
+    }
+
+
+    try {
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .from("withdrawals")
+                .delete()
+                .eq("id", id);
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        showToast(
+            "Вывод удален"
+        );
+
+
+        await loadAllData();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(
+            "Ошибка удаления: " +
+            error.message,
+            "error"
+        );
+
+    }
+
 }
 
 
@@ -2750,241 +3607,460 @@ async function saveWithdrawal(event) {
 function getPaidOrders() {
 
     return orders.filter(isPaid);
+
 }
 
 
-function renderAnalytics() {
+function calculatePeriodAverage(
+    paidOrders,
+    startDate,
+    endDate
+) {
+
+    const income =
+        paidOrders
+            .filter(order => {
+
+                const parts =
+                    dateParts(
+                        order.date_paid
+                    );
+
+
+                if (!parts) {
+                    return false;
+                }
+
+
+                const date =
+                    new Date(
+                        parts.year,
+                        parts.month - 1,
+                        parts.day
+                    );
+
+
+                return (
+                    date >= startDate &&
+                    date <= endDate
+                );
+
+            })
+            .reduce(
+                (
+                    sum,
+                    order
+                ) =>
+                    sum +
+                    orderTotal(order),
+                0
+            );
+
+
+    /*
+        Средний дневной заработок:
+
+            доход за период /
+            количество календарных дней периода
+
+        Здесь считаются именно календарные дни,
+        а не дни, когда были выполнены заказы.
+    */
+
+    const milliseconds =
+        endDate.getTime() -
+        startDate.getTime();
+
+
+    const days =
+        Math.floor(
+            milliseconds /
+            86400000
+        ) + 1;
+
+
+    return days > 0
+        ? income / days
+        : 0;
+
+}
+
+
+function updateAnalytics() {
 
     const paidOrders =
         getPaidOrders();
 
 
+    const allTime =
+        paidOrders
+            .reduce(
+                (
+                    sum,
+                    order
+                ) =>
+                    sum +
+                    orderTotal(order),
+                0
+            );
+
+
+    $("#allTimeIncome")
+        .textContent =
+        money(allTime);
+
+
+    const now =
+        new Date();
+
+
+    const currentYear =
+        now.getFullYear();
+
+
+    const currentMonth =
+        now.getMonth();
+
+
     /*
-        Сумма за все время.
+        Начало и конец текущего года.
     */
 
-    const allTimeIncome =
-        paidOrders.reduce(
-            (sum, order) =>
-                sum + orderIncome(order),
+    const yearStart =
+        new Date(
+            currentYear,
+            0,
+            1
+        );
+
+
+    const yearEnd =
+        new Date(
+            currentYear,
+            11,
+            31
+        );
+
+
+    /*
+        Начало и конец текущего месяца.
+    */
+
+    const monthStart =
+        new Date(
+            currentYear,
+            currentMonth,
+            1
+        );
+
+
+    const monthEnd =
+        new Date(
+            currentYear,
+            currentMonth + 1,
             0
         );
 
 
-    $("#allTimeIncome").textContent =
-        money(allTimeIncome);
-
-
-    renderYearIncome(paidOrders);
-
-    renderMonthIncome(paidOrders);
-
-    renderWorkRating(paidOrders);
-
-    renderDailyAverages(paidOrders);
-}
-
-
-function getPaidDate(order) {
-
     /*
-        Аналитические графики должны использовать именно
-        date_paid.
-
-        Если статус "Оплачен", но дата почему-то отсутствует,
-        такой заказ нельзя корректно привязать к месяцу/году.
-        Поэтому для аналитики он пропускается.
+        Для "всего времени" используем диапазон
+        от первой оплаты до сегодняшнего дня.
     */
 
-    return order.date_paid || null;
-}
+    let allTimeStart =
+        new Date(
+            currentYear,
+            0,
+            1
+        );
 
 
-/* ============================================================
-   YEAR ANALYTICS
-   ============================================================ */
+    const paidDates =
+        paidOrders
+            .map(
+                order =>
+                    dateParts(
+                        order.date_paid
+                    )
+            )
+            .filter(Boolean);
 
-function getIncomeByYears(paidOrders) {
 
-    const result = {};
+    if (paidDates.length) {
+
+        paidDates.sort(
+            (a, b) =>
+                new Date(
+                    a.year,
+                    a.month - 1,
+                    a.day
+                ) -
+                new Date(
+                    b.year,
+                    b.month - 1,
+                    b.day
+                )
+        );
+
+
+        const first =
+            paidDates[0];
+
+
+        allTimeStart =
+            new Date(
+                first.year,
+                first.month - 1,
+                first.day
+            );
+
+    }
+
+
+    const averageAllTime =
+        calculatePeriodAverage(
+            paidOrders,
+            allTimeStart,
+            now
+        );
+
+
+    const averageYear =
+        calculatePeriodAverage(
+            paidOrders,
+            yearStart,
+            yearEnd
+        );
+
+
+    const averageMonth =
+        calculatePeriodAverage(
+            paidOrders,
+            monthStart,
+            monthEnd
+        );
+
+
+    $("#averageDayAllTime")
+        .textContent =
+        money(averageAllTime);
+
+
+    $("#averageDayCurrentYear")
+        .textContent =
+        money(averageYear);
+
+
+    $("#averageDayCurrentMonth")
+        .textContent =
+        money(averageMonth);
+
+
+    /* --------------------------------------------------------
+       YEARS
+       -------------------------------------------------------- */
+
+    const byYear = {};
+
 
     paidOrders.forEach(order => {
 
-        const date =
-            getPaidDate(order);
-
-        if (!date) {
-            return;
-        }
-
-        const year =
-            date.substring(0, 4);
-
-        result[year] =
-            (result[year] || 0) +
-            orderIncome(order);
-    });
-
-
-    return result;
-}
-
-
-function renderYearIncome(paidOrders) {
-
-    const list =
-        $("#yearIncomeList");
-
-    list.innerHTML = "";
-
-
-    const data =
-        getIncomeByYears(paidOrders);
-
-
-    const years =
-        Object.keys(data)
-            .sort((a, b) =>
-                Number(b) - Number(a)
+        const parts =
+            dateParts(
+                order.date_paid
             );
 
 
-    if (!years.length) {
-
-        list.innerHTML = `
-            <li>
-                <span>Нет данных</span>
-                <strong>0 ₽</strong>
-            </li>
-        `;
-
-        return;
-    }
+        if (!parts) {
+            return;
+        }
 
 
-    years.forEach(year => {
+        if (!byYear[parts.year]) {
 
-        const li =
-            document.createElement("li");
+            byYear[parts.year] = 0;
 
-        li.innerHTML = `
-            <span>${year}</span>
-            <strong>${money(data[year])}</strong>
-        `;
+        }
 
-        list.appendChild(li);
+
+        byYear[parts.year] +=
+            orderTotal(order);
+
     });
 
 
-    fillYearSelects(years);
-}
+    const years =
+        Object.keys(byYear)
+            .map(Number)
+            .sort(
+                (a, b) => b - a
+            );
 
 
-/* ============================================================
-   YEAR SELECTS
-   ============================================================ */
+    $("#yearIncomeList").innerHTML =
+        years.length
+            ? years
+                .map(year => `
+                    <li>
+                        <span>
+                            ${year}
+                        </span>
 
-function getAvailableYears() {
-
-    const years = new Set();
-
-    getPaidOrders()
-        .forEach(order => {
-
-            const date =
-                getPaidDate(order);
-
-            if (date) {
-                years.add(
-                    date.substring(0, 4)
-                );
-            }
-        });
-
-
-    /*
-        Добавляем текущий год, чтобы интерфейс был доступен
-        даже при отсутствии оплаченных заказов в текущем году.
-    */
-
-    years.add(
-        String(new Date().getFullYear())
-    );
+                        <span class="stat-value">
+                            ${money(
+                                byYear[year]
+                            )}
+                        </span>
+                    </li>
+                `)
+                .join("")
+            : `
+                <li>
+                    Нет данных
+                </li>
+            `;
 
 
-    return Array.from(years)
-        .sort((a, b) =>
-            Number(b) - Number(a)
-        );
-}
+    /* --------------------------------------------------------
+       MONTHS
+       -------------------------------------------------------- */
+
+    renderMonthlyAnalytics();
 
 
-function fillYearSelects(years = getAvailableYears()) {
+    /* --------------------------------------------------------
+       TYPE RANKING
+       -------------------------------------------------------- */
 
-    const analyticsSelect =
-        $("#analyticsYear");
-
-    const chartYear =
-        $("#chartYear");
+    const byType = {};
 
 
-    const currentAnalytics =
-        analyticsSelect.value;
+    TYPE_NAMES.forEach(type => {
 
-    const currentChart =
-        chartYear.value;
+        byType[type] = {
 
+            income: 0,
 
-    analyticsSelect.innerHTML = "";
+            hours: 0,
 
-    chartYear.innerHTML = "";
+            count: 0
 
+        };
 
-    years.forEach(year => {
-
-        const option1 =
-            document.createElement("option");
-
-        option1.value = year;
-        option1.textContent = year;
-
-        analyticsSelect.appendChild(option1);
-
-
-        const option2 =
-            document.createElement("option");
-
-        option2.value = year;
-        option2.textContent = year;
-
-        chartYear.appendChild(option2);
     });
 
 
-    if (years.includes(currentAnalytics)) {
-        analyticsSelect.value =
-            currentAnalytics;
-    }
+    paidOrders.forEach(order => {
+
+        const type =
+            order.type_work ||
+            "Другое";
 
 
-    if (years.includes(currentChart)) {
-        chartYear.value =
-            currentChart;
-    }
+        if (!byType[type]) {
+
+            byType[type] = {
+
+                income: 0,
+
+                hours: 0,
+
+                count: 0
+
+            };
+
+        }
 
 
-    if (!analyticsSelect.value) {
-
-        analyticsSelect.value =
-            String(new Date().getFullYear());
-    }
+        byType[type].income +=
+            orderTotal(order);
 
 
-    if (!chartYear.value) {
+        byType[type].hours +=
+            Number(
+                order.hours_spent
+            ) || 0;
 
-        chartYear.value =
-            String(new Date().getFullYear());
-    }
+
+        byType[type].count++;
+
+    });
+
+
+    const typeRanking =
+        Object.entries(byType)
+            .filter(
+                ([, data]) =>
+                    data.count > 0
+            )
+            .sort(
+                (
+                    [, a],
+                    [, b]
+                ) =>
+                    b.income -
+                    a.income
+            );
+
+
+    $("#typeRankingList").innerHTML =
+        typeRanking.length
+            ? typeRanking
+                .map(
+                    (
+                        [type, data]
+                    ) => {
+
+                        const hourly =
+                            data.hours > 0
+                                ? data.income /
+                                  data.hours
+                                : null;
+
+
+                        return `
+                            <li>
+
+                                <span>
+                                    ${escapeHtml(type)}
+                                </span>
+
+                                <span
+                                    class="stat-value"
+                                >
+                                    ${money(
+                                        data.income
+                                    )}
+
+                                    <br>
+
+                                    <small
+                                        style="
+                                            color:#94a3b8;
+                                            font-weight:400;
+                                        "
+                                    >
+                                        Р/час:
+                                        ${
+                                            hourly === null
+                                                ? "—"
+                                                : money(hourly)
+                                        }
+                                    </small>
+                                </span>
+
+                            </li>
+                        `;
+
+                    }
+                )
+                .join("")
+            : `
+                <li>
+                    Нет оплаченных заказов
+                </li>
+            `;
+
 }
 
 
@@ -2992,410 +4068,376 @@ function fillYearSelects(years = getAvailableYears()) {
    MONTH ANALYTICS
    ============================================================ */
 
-function getMonthlyIncome(paidOrders, year) {
+function renderMonthlyAnalytics() {
 
-    const months =
+    const year =
+        Number(
+            $("#analyticsYear").value
+        );
+
+
+    const monthly =
         Array(12).fill(0);
 
 
-    paidOrders.forEach(order => {
+    if (!year) {
 
-        const date =
-            getPaidDate(order);
+        $("#monthIncomeList").innerHTML =
+            "<li>Нет данных</li>";
 
-        if (!date) {
-            return;
-        }
+        return;
 
-
-        const orderYear =
-            Number(date.substring(0, 4));
-
-        if (orderYear !== Number(year)) {
-            return;
-        }
+    }
 
 
-        const month =
-            Number(date.substring(5, 7)) - 1;
+    getPaidOrders()
+        .forEach(order => {
+
+            const parts =
+                dateParts(
+                    order.date_paid
+                );
 
 
-        months[month] +=
-            orderIncome(order);
-    });
+            if (
+                parts &&
+                parts.year === year
+            ) {
+
+                monthly[
+                    parts.month - 1
+                ] +=
+                    orderTotal(order);
+
+            }
+
+        });
 
 
-    return months;
+    $("#monthIncomeList").innerHTML =
+        MONTH_NAMES
+            .map(
+                (
+                    month,
+                    index
+                ) => `
+
+                    <li>
+
+                        <span>
+                            ${month}
+                        </span>
+
+                        <span
+                            class="stat-value"
+                        >
+                            ${money(
+                                monthly[index]
+                            )}
+                        </span>
+
+                    </li>
+                `
+            )
+            .join("");
+
 }
 
 
-function renderMonthIncome(paidOrders) {
+/* ============================================================
+   YEAR SELECTORS
+   ============================================================ */
 
-    const year =
-        Number($("#analyticsYear").value);
+function getAvailableYears() {
+
+    const years =
+        getPaidOrders()
+            .map(order => {
+
+                const parts =
+                    dateParts(
+                        order.date_paid
+                    );
+
+                return parts?.year;
+
+            })
+            .filter(Boolean);
+
+
+    const currentYear =
+        new Date().getFullYear();
+
+
+    years.push(currentYear);
+
+
+    return [
+        ...new Set(years)
+    ].sort(
+        (a, b) => b - a
+    );
+
+}
+
+
+function updateYearSelectors() {
+
+    const years =
+        getAvailableYears();
+
+
+    const currentYear =
+        new Date().getFullYear();
+
+
+    const analyticsSelect =
+        $("#analyticsYear");
+
+
+    const oldAnalytics =
+        Number(
+            analyticsSelect.value
+        );
+
+
+    analyticsSelect.innerHTML =
+        years
+            .map(
+                year => `
+                    <option value="${year}">
+                        ${year}
+                    </option>
+                `
+            )
+            .join("");
+
+
+    analyticsSelect.value =
+        years.includes(
+            oldAnalytics
+        )
+            ? oldAnalytics
+            : currentYear;
+
+
+    renderMonthlyAnalytics();
+
+
+    const monthSelect =
+        $("#chartMonth");
+
+
+    const currentMonth =
+        new Date().getMonth();
+
+
+    monthSelect.innerHTML =
+        MONTH_NAMES
+            .map(
+                (
+                    month,
+                    index
+                ) => `
+                    <option value="${index}">
+                        ${month}
+                    </option>
+                `
+            )
+            .join("");
+
+
+    monthSelect.value =
+        currentMonth;
+
+}
+
+
+/* ============================================================
+   CHART DATA
+   ============================================================ */
+
+function yearlyChartData() {
+
+    const map = {};
+
+
+    getPaidOrders()
+        .forEach(order => {
+
+            const parts =
+                dateParts(
+                    order.date_paid
+                );
+
+
+            if (!parts) {
+                return;
+            }
+
+
+            if (!map[parts.year]) {
+
+                map[parts.year] = 0;
+
+            }
+
+
+            map[parts.year] +=
+                orderTotal(order);
+
+        });
+
+
+    const years =
+        Object.keys(map)
+            .map(Number)
+            .sort(
+                (a, b) => a - b
+            );
+
+
+    return {
+
+        labels: years,
+
+        values:
+            years.map(
+                year => map[year]
+            )
+
+    };
+
+}
+
+
+function monthlyChartData(year) {
+
+    const values =
+        Array(12).fill(0);
+
+
+    getPaidOrders()
+        .forEach(order => {
+
+            const parts =
+                dateParts(
+                    order.date_paid
+                );
+
+
+            if (
+                parts &&
+                parts.year === year
+            ) {
+
+                values[
+                    parts.month - 1
+                ] +=
+                    orderTotal(order);
+
+            }
+
+        });
+
+
+    return {
+
+        labels:
+            MONTH_NAMES,
+
+        values:
+            values
+
+    };
+
+}
+
+
+function dailyChartData(
+    year,
+    monthIndex
+) {
+
+    const daysInMonth =
+        new Date(
+            year,
+            monthIndex + 1,
+            0
+        ).getDate();
 
 
     const values =
-        getMonthlyIncome(
-            paidOrders,
-            year
-        );
+        Array(
+            daysInMonth
+        ).fill(0);
 
 
-    const list =
-        $("#monthIncomeList");
+    getPaidOrders()
+        .forEach(order => {
 
-    list.innerHTML = "";
+            const parts =
+                dateParts(
+                    order.date_paid
+                );
 
 
-    values.forEach((value, index) => {
+            if (
+                parts &&
+                parts.year === year &&
+                parts.month === monthIndex + 1
+            ) {
 
-        const li =
-            document.createElement("li");
+                values[
+                    parts.day - 1
+                ] +=
+                    orderTotal(order);
 
-        li.innerHTML = `
-            <span>${MONTH_NAMES[index]}</span>
-            <strong>${money(value)}</strong>
-        `;
+            }
 
-        list.appendChild(li);
-    });
+        });
+
+
+    return {
+
+        labels:
+            Array.from(
+                {
+                    length: daysInMonth
+                },
+                (_, index) =>
+                    String(
+                        index + 1
+                    )
+            ),
+
+        values:
+            values
+
+    };
+
 }
 
 
 /* ============================================================
-   WORK TYPE RATING
+   RENDER CHART
    ============================================================ */
 
-function renderWorkRating(paidOrders) {
+function renderChart() {
 
-    const tbody =
-        $("#workRatingBody");
-
-    tbody.innerHTML = "";
-
-
-    const groups = {};
-
-
-    paidOrders.forEach(order => {
-
-        const type =
-            order.type_work || "Другое";
-
-
-        if (!groups[type]) {
-
-            groups[type] = {
-                count: 0,
-                income: 0,
-                hourlyRates: []
-            };
-        }
-
-
-        groups[type].count++;
-
-        groups[type].income +=
-            orderIncome(order);
-
-
-        const hours =
-            Number(order.hours_spent || 0);
-
-
-        /*
-            Средний Р/час считается как среднее значение
-            индивидуального Р/час каждого оплаченного заказа.
-
-            Формула отдельного заказа:
-                (price + tips) / hours
-
-            Заказы с hours = 0 исключаются из среднего,
-            поскольку их почасовую эффективность определить
-            невозможно.
-        */
-
-        if (hours > 0) {
-
-            groups[type].hourlyRates.push(
-                orderIncome(order) / hours
-            );
-        }
-    });
-
-
-    const rows =
-        Object.entries(groups)
-            .map(([type, data]) => {
-
-                const avgHourly =
-                    data.hourlyRates.length
-                        ? data.hourlyRates.reduce(
-                            (sum, value) =>
-                                sum + value,
-                            0
-                        ) /
-                        data.hourlyRates.length
-                        : null;
-
-
-                return {
-                    type,
-                    count: data.count,
-                    income: data.income,
-                    avgHourly
-                };
-            })
-            .sort((a, b) =>
-                b.income - a.income
-            );
-
-
-    if (!rows.length) {
-
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="4" class="empty">
-                    Нет оплаченных заказов
-                </td>
-            </tr>
-        `;
-
-        return;
-    }
-
-
-    rows.forEach(row => {
-
-        const tr =
-            document.createElement("tr");
-
-
-        tr.innerHTML = `
-            <td>${escapeHtml(row.type)}</td>
-            <td>${row.count}</td>
-            <td>${money(row.income)}</td>
-            <td>
-                ${
-                    row.avgHourly === null
-                        ? "—"
-                        : money(row.avgHourly) + "/ч"
-                }
-            </td>
-        `;
-
-
-        tbody.appendChild(tr);
-    });
-}
-
-
-/* ============================================================
-   DAILY AVERAGES
-   ============================================================ */
-
-function daysBetweenInclusive(start, end) {
-
-    const startDate =
-        new Date(start + "T00:00:00");
-
-    const endDate =
-        new Date(end + "T00:00:00");
-
-
-    const milliseconds =
-        endDate.getTime() -
-        startDate.getTime();
-
-
-    return Math.floor(
-        milliseconds / 86400000
-    ) + 1;
-}
-
-
-function calculatePeriodIncome(
-    paidOrders,
-    startDate,
-    endDate
-) {
-
-    return paidOrders
-        .filter(order => {
-
-            const date =
-                getPaidDate(order);
-
-            return (
-                date &&
-                date >= startDate &&
-                date <= endDate
-            );
-        })
-        .reduce(
-            (sum, order) =>
-                sum + orderIncome(order),
-            0
-        );
-}
-
-
-function renderDailyAverages(paidOrders) {
-
-    const today =
-        new Date();
-
-    const todayString =
-        localDateString(today);
+    const canvas =
+        $("#incomeChart");
 
 
     /*
-        Текущий год:
-        от 1 января до сегодняшней даты.
-    */
+        КРИТИЧЕСКИ ВАЖНО:
 
-    const currentYear =
-        today.getFullYear();
+        Перед созданием нового Chart.js
+        уничтожаем старый экземпляр.
 
-
-    const yearStart =
-        `${currentYear}-01-01`;
-
-
-    const yearIncome =
-        calculatePeriodIncome(
-            paidOrders,
-            yearStart,
-            todayString
-        );
-
-
-    const yearDays =
-        daysBetweenInclusive(
-            yearStart,
-            todayString
-        );
-
-
-    const yearAverage =
-        yearDays > 0
-            ? yearIncome / yearDays
-            : 0;
-
-
-    /*
-        Текущий месяц:
-        от первого числа текущего месяца до сегодняшней даты.
-    */
-
-    const monthStart =
-        `${currentYear}-${String(
-            today.getMonth() + 1
-        ).padStart(2, "0")}-01`;
-
-
-    const monthIncome =
-        calculatePeriodIncome(
-            paidOrders,
-            monthStart,
-            todayString
-        );
-
-
-    const monthDays =
-        daysBetweenInclusive(
-            monthStart,
-            todayString
-        );
-
-
-    const monthAverage =
-        monthDays > 0
-            ? monthIncome / monthDays
-            : 0;
-
-
-    /*
-        За все время:
-
-        Берем дату самого раннего оплаченного заказа
-        и делим общий доход на количество календарных дней
-        от этой даты до сегодняшнего дня.
-
-        Если оплаченных заказов нет — среднее равно 0.
-    */
-
-    const paidDates =
-        paidOrders
-            .map(getPaidDate)
-            .filter(Boolean)
-            .sort();
-
-
-    let allTimeAverage = 0;
-
-    if (paidDates.length) {
-
-        const firstDate =
-            paidDates[0];
-
-        const allTimeIncome =
-            calculatePeriodIncome(
-                paidOrders,
-                firstDate,
-                todayString
-            );
-
-
-        const allTimeDays =
-            daysBetweenInclusive(
-                firstDate,
-                todayString
-            );
-
-
-        allTimeAverage =
-            allTimeDays > 0
-                ? allTimeIncome / allTimeDays
-                : 0;
-    }
-
-
-    $("#dailyAverages").innerHTML = `
-
-        <div style="margin-bottom:10px">
-            <strong>За всё время:</strong>
-            ${money(allTimeAverage)} / день
-        </div>
-
-        <div style="margin-bottom:10px">
-            <strong>Текущий год:</strong>
-            ${money(yearAverage)} / день
-        </div>
-
-        <div>
-            <strong>Текущий месяц:</strong>
-            ${money(monthAverage)} / день
-        </div>
-
-    `;
-}
-
-
-/* ============================================================
-   CHARTS
-   ============================================================ */
-
-function destroyCurrentChart() {
-
-    /*
-        ОБЯЗАТЕЛЬНО уничтожаем старый экземпляр Chart.js
-        перед созданием нового.
-
-        Иначе при переключении графиков Chart.js может
-        оставить старый экземпляр на canvas, что приводит
-        к наложению графиков и проблемам с hover/tooltip.
+        Иначе при переключении вкладок
+        графики могут накладываться друг
+        на друга.
     */
 
     if (currentChart) {
@@ -3403,405 +4445,207 @@ function destroyCurrentChart() {
         currentChart.destroy();
 
         currentChart = null;
-    }
-}
 
-
-function renderChart(type) {
-
-    destroyCurrentChart();
-
-
-    const canvas =
-        $("#incomeChart");
-
-
-    const ctx =
-        canvas.getContext("2d");
-
-
-    const paidOrders =
-        getPaidOrders();
-
-
-    if (type === "years") {
-
-        renderYearChart(
-            ctx,
-            paidOrders
-        );
-
-        $("#chartMonthWrapper")
-            .classList
-            .add("hidden");
-
-        return;
     }
 
 
-    $("#chartMonthWrapper")
-        .classList
-        .remove("hidden");
+    let labels = [];
 
+    let values = [];
 
-    if (type === "months") {
+    let type = "bar";
 
-        renderMonthChart(
-            ctx,
-            paidOrders
-        );
-
-        return;
-    }
-
-
-    if (type === "days") {
-
-        renderDayChart(
-            ctx,
-            paidOrders
-        );
-    }
-}
-
-
-/* ============================================================
-   YEAR CHART
-   ============================================================ */
-
-function renderYearChart(ctx, paidOrders) {
-
-    const data =
-        getIncomeByYears(paidOrders);
-
-
-    const years =
-        Object.keys(data)
-            .sort();
-
-
-    currentChart =
-        new Chart(ctx, {
-
-            type: "bar",
-
-            data: {
-
-                labels: years,
-
-                datasets: [{
-                    label: "Доход",
-
-                    data:
-                        years.map(
-                            year => data[year]
-                        ),
-
-                    borderWidth: 1
-                }]
-            },
-
-            options: {
-
-                responsive: true,
-
-                maintainAspectRatio: false,
-
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-
-                    tooltip: {
-
-                        callbacks: {
-
-                            label: context =>
-                                money(
-                                    context.raw
-                                )
-                        }
-                    }
-                },
-
-                scales: {
-
-                    y: {
-
-                        beginAtZero: true,
-
-                        ticks: {
-
-                            callback: value =>
-                                money(value)
-                        }
-                    }
-                }
-            }
-        });
-}
-
-
-/* ============================================================
-   MONTH CHART
-   ============================================================ */
-
-function renderMonthChart(ctx, paidOrders) {
-
-    const year =
-        Number($("#chartYear").value);
-
-
-    const values =
-        getMonthlyIncome(
-            paidOrders,
-            year
-        );
-
-
-    currentChart =
-        new Chart(ctx, {
-
-            type: "line",
-
-            data: {
-
-                labels: MONTH_NAMES,
-
-                datasets: [{
-                    label: `Доход ${year}`,
-
-                    data: values,
-
-                    tension: 0.4,
-
-                    fill: false,
-
-                    borderWidth: 2
-                }]
-            },
-
-            options: {
-
-                responsive: true,
-
-                maintainAspectRatio: false,
-
-                plugins: {
-
-                    tooltip: {
-
-                        callbacks: {
-
-                            label: context =>
-                                money(
-                                    context.raw
-                                )
-                        }
-                    }
-                },
-
-                scales: {
-
-                    y: {
-
-                        beginAtZero: true,
-
-                        ticks: {
-
-                            callback: value =>
-                                money(value)
-                        }
-                    }
-                }
-            }
-        });
-}
-
-
-/* ============================================================
-   DAY CHART
-   ============================================================ */
-
-function renderDayChart(ctx, paidOrders) {
-
-    const year =
-        Number($("#chartYear").value);
-
-    const month =
-        Number($("#chartMonth").value);
-
-
-    /*
-        Получаем количество дней в выбранном месяце.
-
-        Date(year, month + 1, 0) дает последний день
-        предыдущего месяца, то есть фактически количество
-        дней месяца, если передать month + 1.
-    */
-
-    const daysInMonth =
-        new Date(
-            year,
-            month + 1,
-            0
-        ).getDate();
-
-
-    const values =
-        Array(daysInMonth).fill(0);
-
-
-    paidOrders.forEach(order => {
-
-        const date =
-            getPaidDate(order);
-
-        if (!date) {
-            return;
-        }
-
-
-        const orderYear =
-            Number(date.substring(0, 4));
-
-        const orderMonth =
-            Number(date.substring(5, 7)) - 1;
-
-
-        if (
-            orderYear !== year ||
-            orderMonth !== month
-        ) {
-            return;
-        }
-
-
-        const day =
-            Number(date.substring(8, 10));
-
-
-        values[day - 1] +=
-            orderIncome(order);
-    });
-
-
-    const labels =
-        values.map(
-            (_, index) =>
-                String(index + 1)
-        );
-
-
-    currentChart =
-        new Chart(ctx, {
-
-            type: "line",
-
-            data: {
-
-                labels,
-
-                datasets: [{
-
-                    label:
-                        `Доход ${MONTH_NAMES[month]} ${year}`,
-
-                    data: values,
-
-                    tension: 0.4,
-
-                    fill: false,
-
-                    borderWidth: 2
-                }]
-            },
-
-            options: {
-
-                responsive: true,
-
-                maintainAspectRatio: false,
-
-                plugins: {
-
-                    tooltip: {
-
-                        callbacks: {
-
-                            label: context =>
-                                money(
-                                    context.raw
-                                )
-                        }
-                    }
-                },
-
-                scales: {
-
-                    y: {
-
-                        beginAtZero: true,
-
-                        ticks: {
-
-                            callback: value =>
-                                money(value)
-                        }
-                    }
-                }
-            }
-        });
-}
-
-
-/* ============================================================
-   MONTH SELECT
-   ============================================================ */
-
-function fillMonthSelect() {
-
-    const select =
-        $("#chartMonth");
-
-
-    const current =
-        select.value;
-
-
-    select.innerHTML = "";
-
-
-    MONTH_NAMES.forEach(
-        (month, index) => {
-
-            const option =
-                document.createElement("option");
-
-            option.value = index;
-            option.textContent = month;
-
-            select.appendChild(option);
-        }
-    );
+    let tension = 0;
 
 
     if (
-        current !== "" &&
-        Number(current) >= 0
+        currentChartType === "years"
     ) {
-        select.value = current;
 
-    } else {
+        const data =
+            yearlyChartData();
 
-        select.value =
-            new Date().getMonth();
+
+        labels =
+            data.labels;
+
+        values =
+            data.values;
+
+        type = "bar";
+
+        $("#dailyChartControls")
+            .classList
+            .add("hidden");
+
     }
+
+
+    else if (
+        currentChartType === "months"
+    ) {
+
+        const year =
+            Number(
+                $("#analyticsYear").value
+            );
+
+
+        const data =
+            monthlyChartData(year);
+
+
+        labels =
+            data.labels;
+
+        values =
+            data.values;
+
+        type = "line";
+
+        tension = 0.4;
+
+
+        $("#dailyChartControls")
+            .classList
+            .add("hidden");
+
+    }
+
+
+    else if (
+        currentChartType === "days"
+    ) {
+
+        const year =
+            new Date().getFullYear();
+
+
+        const month =
+            Number(
+                $("#chartMonth").value
+            );
+
+
+        const data =
+            dailyChartData(
+                year,
+                month
+            );
+
+
+        labels =
+            data.labels;
+
+        values =
+            data.values;
+
+        type = "line";
+
+        tension = 0.4;
+
+
+        $("#dailyChartControls")
+            .classList
+            .remove("hidden");
+
+    }
+
+
+    currentChart =
+        new Chart(
+            canvas,
+            {
+
+                type: type,
+
+                data: {
+
+                    labels: labels,
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                "Заработок, ₽",
+
+                            data:
+                                values,
+
+                            borderWidth: 2,
+
+                            tension:
+                                tension,
+
+                            fill:
+                                false
+
+                        }
+
+                    ]
+
+                },
+
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    interaction: {
+
+                        mode: "index",
+
+                        intersect: false
+
+                    },
+
+
+                    plugins: {
+
+                        legend: {
+
+                            display: true
+
+                        }
+
+                    },
+
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero: true,
+
+                            ticks: {
+
+                                callback:
+                                    value =>
+                                        Number(
+                                            value
+                                        ).toLocaleString(
+                                            "ru-RU"
+                                        ) + " ₽"
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
 }
 
 
 /* ============================================================
-   MODAL HELPERS
+   MODALS
    ============================================================ */
 
 function closeModal(id) {
@@ -3809,6 +4653,16 @@ function closeModal(id) {
     $("#" + id)
         .classList
         .add("hidden");
+
+}
+
+
+function openModal(id) {
+
+    $("#" + id)
+        .classList
+        .remove("hidden");
+
 }
 
 
@@ -3819,161 +4673,128 @@ function closeModal(id) {
 function openSettings() {
 
     const credentials =
-        getSavedCredentials();
+        getCredentials();
 
 
-    $("#settingsUrl").value =
-        credentials.url || "";
+    $("#settingsUrl")
+        .value =
+        credentials.url;
 
 
-    $("#settingsKey").value =
-        credentials.key || "";
+    $("#settingsKey")
+        .value =
+        credentials.key;
 
 
-    $("#settingsModal")
-        .classList
-        .remove("hidden");
+    openModal(
+        "settingsModal"
+    );
+
 }
 
 
-async function saveSettings(event) {
+/* ============================================================
+   START APPLICATION
+   ============================================================ */
 
-    event.preventDefault();
+async function startApplication() {
+
+    console.log(
+        "Application starting..."
+    );
 
 
-    const url =
-        $("#settingsUrl").value.trim();
-
-    const key =
-        $("#settingsKey").value.trim();
+    const credentials =
+        getCredentials();
 
 
-    if (!url || !key) {
+    /*
+        Шаг 1.
 
-        showToast(
-            "Заполните оба поля",
-            "error"
+        Если URL/key отсутствуют,
+        показываем экран настройки.
+    */
+
+    if (
+        !credentials.url ||
+        !credentials.key
+    ) {
+
+        showSetupScreen();
+
+        return;
+
+    }
+
+
+    /*
+        Шаг 2.
+
+        Создаем Supabase client.
+    */
+
+    const initialized =
+        initializeSupabase(
+            credentials.url,
+            credentials.key
         );
 
+
+    if (!initialized) {
+
         return;
+
     }
 
 
-    try {
+    /*
+        Шаг 3.
 
-        new URL(url);
+        Проверяем существующую Auth-сессию.
+    */
 
-    } catch {
+    const authenticated =
+        await checkSession();
 
-        showToast(
-            "Некорректный Supabase URL",
-            "error"
-        );
+
+    if (!authenticated) {
 
         return;
+
     }
 
 
-    localStorage.setItem(
-        STORAGE_URL,
-        url
-    );
+    /*
+        Шаг 4.
 
-    localStorage.setItem(
-        STORAGE_KEY,
-        key
-    );
+        Пользователь авторизован.
+    */
 
-
-    if (!initializeSupabase(url, key)) {
-        return;
-    }
-
-
-    closeModal("settingsModal");
-
-    showToast(
-        "Настройки подключения сохранены"
-    );
+    showApp();
 
 
     await loadAllData();
-}
 
-
-function clearCredentials() {
-
-    const confirmed =
-        confirm(
-            "Удалить сохраненные ключи Supabase из этого браузера?"
-        );
-
-
-    if (!confirmed) {
-        return;
-    }
-
-
-    localStorage.removeItem(
-        STORAGE_URL
-    );
-
-    localStorage.removeItem(
-        STORAGE_KEY
-    );
-
-
-    supabaseClient = null;
-
-    closeModal("settingsModal");
-
-    $("#app").classList.add("hidden");
-
-    $("#setupScreen")
-        .classList
-        .remove("hidden");
 }
 
 
 /* ============================================================
-   RENDER EVERYTHING
-   ============================================================ */
-
-function renderEverything() {
-
-    renderBalances();
-
-    renderOrders();
-
-    renderAnalytics();
-
-    fillMonthSelect();
-
-    fillYearSelects();
-
-    renderChart(
-        document
-            .querySelector(".chart-tab.active")
-            ?.dataset.chart || "years"
-    );
-}
-
-
-/* ============================================================
-   EVENT LISTENERS
+   SETUP FORM
    ============================================================ */
 
 $("#setupForm")
     .addEventListener(
         "submit",
-        event => {
+        async event => {
 
             event.preventDefault();
+
 
             const url =
                 $("#supabaseUrl")
                     .value
                     .trim();
+
 
             const key =
                 $("#supabaseKey")
@@ -3982,22 +4803,58 @@ $("#setupForm")
 
 
             if (!url || !key) {
+
+                showToast(
+                    "Введите URL и ключ",
+                    "error"
+                );
+
                 return;
+
             }
 
 
-            localStorage.setItem(
-                STORAGE_URL,
-                url
-            );
-
-            localStorage.setItem(
-                STORAGE_KEY,
+            saveCredentials(
+                url,
                 key
             );
 
-            /* ============================================================
-   SUPABASE AUTH
+
+            if (
+                !initializeSupabase(
+                    url,
+                    key
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            const authenticated =
+                await checkSession();
+
+
+            if (
+                !authenticated
+            ) {
+
+                return;
+
+            }
+
+
+            showApp();
+
+            await loadAllData();
+
+        }
+    );
+
+
+/* ============================================================
+   LOGIN FORM
    ============================================================ */
 
 $("#loginForm")
@@ -4008,17 +4865,33 @@ $("#loginForm")
             event.preventDefault();
 
 
+            if (!supabaseClient) {
+
+                showToast(
+                    "Supabase не подключен",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
             const email =
                 $("#loginEmail")
                     .value
                     .trim();
+
 
             const password =
                 $("#loginPassword")
                     .value;
 
 
-            if (!email || !password) {
+            if (
+                !email ||
+                !password
+            ) {
 
                 showToast(
                     "Введите email и пароль",
@@ -4026,7 +4899,20 @@ $("#loginForm")
                 );
 
                 return;
+
             }
+
+
+            const button =
+                $("#loginButton");
+
+
+            button.disabled =
+                true;
+
+
+            button.textContent =
+                "Вход...";
 
 
             try {
@@ -4034,14 +4920,24 @@ $("#loginForm")
                 const {
                     data,
                     error
-                } = await supabaseClient.auth.signInWithPassword({
-                    email,
-                    password
-                });
+                } =
+                    await supabaseClient
+                        .auth
+                        .signInWithPassword({
+
+                            email:
+                                email,
+
+                            password:
+                                password
+
+                        });
 
 
                 if (error) {
+
                     throw error;
+
                 }
 
 
@@ -4049,37 +4945,52 @@ $("#loginForm")
                     data.user;
 
 
-                $("#authScreen")
-                    .classList
-                    .add("hidden");
-
-                $("#app")
-                    .classList
-                    .remove("hidden");
+                $("#loginForm")
+                    .reset();
 
 
-                showToast("Вы успешно вошли");
+                showApp();
 
 
                 await loadAllData();
 
 
+                showToast(
+                    "Вход выполнен"
+                );
+
+
             } catch (error) {
 
-                console.error(error);
+                console.error(
+                    "LOGIN ERROR:",
+                    error
+                );
+
 
                 showToast(
                     "Ошибка входа: " +
-                    (
-                        error.message ||
-                        "неверный email или пароль"
-                    ),
+                    error.message,
                     "error"
                 );
+
+            } finally {
+
+                button.disabled =
+                    false;
+
+                button.textContent =
+                    "Войти";
+
             }
+
         }
     );
 
+
+/* ============================================================
+   LOGOUT
+   ============================================================ */
 
 $("#logoutButton")
     .addEventListener(
@@ -4090,7 +5001,10 @@ $("#logoutButton")
 
                 const {
                     error
-                } = await supabaseClient.auth.signOut();
+                } =
+                    await supabaseClient
+                        .auth
+                        .signOut();
 
 
                 if (error) {
@@ -4101,25 +5015,25 @@ $("#logoutButton")
                 currentUser = null;
 
                 orders = [];
+
                 withdrawals = [];
 
 
                 if (currentChart) {
+
                     currentChart.destroy();
+
                     currentChart = null;
+
                 }
 
 
-                $("#app")
-                    .classList
-                    .add("hidden");
-
-                $("#authScreen")
-                    .classList
-                    .remove("hidden");
+                showAuthScreen();
 
 
-                $("#loginForm").reset();
+                showToast(
+                    "Вы вышли из аккаунта"
+                );
 
 
             } catch (error) {
@@ -4131,68 +5045,97 @@ $("#logoutButton")
                     error.message,
                     "error"
                 );
+
             }
+
         }
     );
 
 
-/*
-    Если пользователь вошел/вышел в другой вкладке,
-    приложение автоматически реагирует на изменение сессии.
-*/
+/* ============================================================
+   AUTH STATE CHANGE
+   ============================================================ */
 
-supabaseClient?.auth.onAuthStateChange(
-    (event, session) => {
+async function setupAuthListener() {
 
-        if (event === "SIGNED_OUT") {
-
-            currentUser = null;
-
-            $("#app")
-                .classList
-                .add("hidden");
-
-            $("#authScreen")
-                .classList
-                .remove("hidden");
-
-            return;
-        }
-
-
-        if (
-            event === "SIGNED_IN" &&
-            session
-        ) {
-
-            currentUser =
-                session.user;
-        }
+    if (!supabaseClient) {
+        return;
     }
-);
-            startApplication();
-        }
-    );
 
+
+    supabaseClient
+        .auth
+        .onAuthStateChange(
+            async (
+                event,
+                session
+            ) => {
+
+                console.log(
+                    "Auth event:",
+                    event
+                );
+
+
+                if (
+                    event ===
+                    "SIGNED_OUT"
+                ) {
+
+                    currentUser =
+                        null;
+
+                    orders = [];
+
+                    withdrawals = [];
+
+
+                    if (
+                        currentChart
+                    ) {
+
+                        currentChart.destroy();
+
+                        currentChart =
+                            null;
+
+                    }
+
+
+                    showAuthScreen();
+
+                }
+
+
+                if (
+                    event ===
+                    "SIGNED_IN" &&
+                    session
+                ) {
+
+                    currentUser =
+                        session.user;
+
+                }
+
+            }
+        );
+
+}
+
+
+/* ============================================================
+   ORDER EVENTS
+   ============================================================ */
 
 $("#addOrderButton")
     .addEventListener(
         "click",
-        openAddOrder
-    );
+        () => {
 
+            openOrderModal();
 
-$("#withdrawalButton")
-    .addEventListener(
-        "click",
-        openWithdrawal
-    );
-
-
-$("#settingsButton")
-    .addEventListener(
-        "click",
-        openSettings
+        }
     );
 
 
@@ -4203,6 +5146,28 @@ $("#orderForm")
     );
 
 
+$("#withdrawalButton")
+    .addEventListener(
+        "click",
+        () => {
+
+            $("#withdrawalForm")
+                .reset();
+
+
+            $("#withdrawalDate")
+                .value =
+                todayString();
+
+
+            openModal(
+                "withdrawalModal"
+            );
+
+        }
+    );
+
+
 $("#withdrawalForm")
     .addEventListener(
         "submit",
@@ -4210,19 +5175,94 @@ $("#withdrawalForm")
     );
 
 
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+
+$("#settingsButton")
+    .addEventListener(
+        "click",
+        openSettings
+    );
+
+
 $("#settingsForm")
     .addEventListener(
         "submit",
-        saveSettings
+        async event => {
+
+            event.preventDefault();
+
+
+            const url =
+                $("#settingsUrl")
+                    .value
+                    .trim();
+
+
+            const key =
+                $("#settingsKey")
+                    .value
+                    .trim();
+
+
+            if (!url || !key) {
+
+                showToast(
+                    "Заполните оба поля",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            saveCredentials(
+                url,
+                key
+            );
+
+
+            closeModal(
+                "settingsModal"
+            );
+
+
+            /*
+                После смены Supabase connection
+                повторно инициализируем клиент.
+            */
+
+            if (
+                !initializeSupabase(
+                    url,
+                    key
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            currentUser = null;
+
+
+            showAuthScreen();
+
+
+            showToast(
+                "Настройки сохранены. Войдите снова."
+            );
+
+        }
     );
 
 
-$("#clearCredentialsButton")
-    .addEventListener(
-        "click",
-        clearCredentials
-    );
-
+/* ============================================================
+   FILTERS
+   ============================================================ */
 
 $("#statusFilter")
     .addEventListener(
@@ -4238,85 +5278,211 @@ $("#typeFilter")
     );
 
 
+$("#resetFilters")
+    .addEventListener(
+        "click",
+        () => {
+
+            $("#statusFilter")
+                .value = "";
+
+            $("#typeFilter")
+                .value = "";
+
+
+            renderOrders();
+
+        }
+    );
+
+
+/* ============================================================
+   ANALYTICS YEAR
+   ============================================================ */
+
 $("#analyticsYear")
     .addEventListener(
         "change",
         () => {
 
-            renderMonthIncome(
-                getPaidOrders()
-            );
-        }
-    );
+            renderMonthlyAnalytics();
 
 
-$("#chartYear")
-    .addEventListener(
-        "change",
-        () => {
+            if (
+                currentChartType ===
+                "months"
+            ) {
 
-            const active =
-                document
-                    .querySelector(
-                        ".chart-tab.active"
-                    );
+                renderChart();
 
-            if (active) {
-                renderChart(
-                    active.dataset.chart
-                );
             }
+
         }
     );
 
+
+/* ============================================================
+   DAILY CHART MONTH
+   ============================================================ */
 
 $("#chartMonth")
     .addEventListener(
         "change",
         () => {
 
-            const active =
-                document
-                    .querySelector(
-                        ".chart-tab.active"
-                    );
+            if (
+                currentChartType ===
+                "days"
+            ) {
 
-            if (active) {
-                renderChart(
-                    active.dataset.chart
-                );
+                renderChart();
+
             }
+
         }
     );
 
 
-$$(".chart-tab")
+/* ============================================================
+   CHART TABS
+   ============================================================ */
+
+document
+    .querySelectorAll(
+        ".chart-tab"
+    )
     .forEach(button => {
 
         button.addEventListener(
             "click",
             () => {
 
-                $$(".chart-tab")
-                    .forEach(item =>
-                        item.classList.remove(
-                            "active"
-                        )
+                document
+                    .querySelectorAll(
+                        ".chart-tab"
+                    )
+                    .forEach(
+                        item =>
+                            item.classList
+                                .remove(
+                                    "active"
+                                )
                     );
 
 
-                button.classList.add("active");
+                button.classList
+                    .add("active");
 
 
-                renderChart(
-                    button.dataset.chart
-                );
+                currentChartType =
+                    button.dataset.chart;
+
+
+                renderChart();
+
             }
         );
+
     });
 
 
-$$("[data-close]")
+/* ============================================================
+   TABLE ACTIONS
+   ============================================================ */
+
+$("#ordersTableBody")
+    .addEventListener(
+        "click",
+        event => {
+
+            const editButton =
+                event.target
+                    .closest(
+                        "[data-edit-order]"
+                    );
+
+
+            const deleteButton =
+                event.target
+                    .closest(
+                        "[data-delete-order]"
+                    );
+
+
+            if (editButton) {
+
+                const id =
+                    editButton.dataset
+                        .editOrder;
+
+
+                const order =
+                    orders.find(
+                        item =>
+                            String(
+                                item.id
+                            ) === String(id)
+                    );
+
+
+                if (order) {
+
+                    openOrderModal(
+                        order
+                    );
+
+                }
+
+            }
+
+
+            if (deleteButton) {
+
+                deleteOrder(
+                    deleteButton
+                        .dataset
+                        .deleteOrder
+                );
+
+            }
+
+        }
+    );
+
+
+$("#withdrawalsTableBody")
+    .addEventListener(
+        "click",
+        event => {
+
+            const button =
+                event.target
+                    .closest(
+                        "[data-delete-withdrawal]"
+                    );
+
+
+            if (button) {
+
+                deleteWithdrawal(
+                    button.dataset
+                        .deleteWithdrawal
+                );
+
+            }
+
+        }
+    );
+
+
+/* ============================================================
+   MODAL CLOSE BUTTONS
+   ============================================================ */
+
+document
+    .querySelectorAll(
+        "[data-close]"
+    )
     .forEach(button => {
 
         button.addEventListener(
@@ -4326,38 +5492,148 @@ $$("[data-close]")
                 closeModal(
                     button.dataset.close
                 );
+
             }
         );
+
     });
 
 
 /*
-    Закрытие модального окна по клику
-    на затемненную область.
+    Закрытие модального окна при клике
+    по затемненному фону.
 */
 
-$$(".modal-backdrop")
-    .forEach(backdrop => {
+document
+    .querySelectorAll(
+        ".modal"
+    )
+    .forEach(modal => {
 
-        backdrop.addEventListener(
+        modal.addEventListener(
             "click",
             event => {
 
-                if (event.target === backdrop) {
-                    backdrop.classList.add(
-                        "hidden"
-                    );
+                if (
+                    event.target === modal
+                ) {
+
+                    modal.classList
+                        .add("hidden");
+
                 }
+
             }
         );
+
     });
+
+
+/* ============================================================
+   KEYBOARD ESC
+   ============================================================ */
+
+document
+    .addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key === "Escape"
+            ) {
+
+                document
+                    .querySelectorAll(
+                        ".modal"
+                    )
+                    .forEach(
+                        modal =>
+                            modal.classList
+                                .add("hidden")
+                    );
+
+            }
+
+        }
+    );
 
 
 /* ============================================================
    START
    ============================================================ */
 
-startApplication();
+(async function () {
+
+    const credentials =
+        getCredentials();
+
+
+    /*
+        Если ключи еще не вводились,
+        показываем Setup.
+    */
+
+    if (
+        !credentials.url ||
+        !credentials.key
+    ) {
+
+        showSetupScreen();
+
+        return;
+
+    }
+
+
+    /*
+        Инициализируем Supabase ДО любых
+        операций Auth.
+    */
+
+    const initialized =
+        initializeSupabase(
+            credentials.url,
+            credentials.key
+        );
+
+
+    if (!initialized) {
+
+        showSetupScreen();
+
+        return;
+
+    }
+
+
+    /*
+        Подключаем listener Auth.
+    */
+
+    await setupAuthListener();
+
+
+    /*
+        Проверяем существующую сессию.
+    */
+
+    const authenticated =
+        await checkSession();
+
+
+    if (!authenticated) {
+
+        return;
+
+    }
+
+
+    showApp();
+
+
+    await loadAllData();
+
+})();
 
 </script>
 
